@@ -83,33 +83,64 @@ export default function Navbar({ darkMode, toggleDark }) {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Drawer */}
       {menuOpen && (
-        <div className="md:hidden bg-surface/95 backdrop-blur-md border-t border-outline-variant px-lg py-md flex flex-col gap-sm">
-          {navLinks.map((link) => {
-            const isActive = location.pathname === link.to;
-            return (
-              <Link
-                key={link.label}
-                to={link.to}
+        <>
+          {/* Backdrop Overlay */}
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 md:hidden"
+            onClick={() => setMenuOpen(false)}
+          />
+          {/* Sidebar Drawer Container */}
+          <div className="fixed top-0 right-0 h-full w-[280px] bg-surface z-50 shadow-2xl p-lg flex flex-col gap-lg md:hidden animate-slide-in">
+            {/* Header inside drawer */}
+            <div className="flex justify-between items-center pb-md border-b border-outline-variant">
+              <span className="font-bold text-[18px] text-brand-green">Menu</span>
+              <button
                 onClick={() => setMenuOpen(false)}
-                className={
-                  isActive
-                    ? "text-on-primary-container font-bold bg-primary-container px-3 py-2 rounded-lg text-[16px]"
-                    : "text-on-surface-variant hover:text-brand-green hover:bg-surface-container-low px-3 py-2 rounded-lg text-[16px]"
-                }
+                className="text-on-surface hover:text-brand-green p-xs rounded-full flex items-center justify-center active:scale-95 transition-transform"
+                aria-label="Close menu"
               >
-                {link.label}
-              </Link>
-            );
-          })}
-          <button
-            className="bg-primary-container text-on-primary-container font-semibold text-[14px] px-md py-sm rounded-lg hover:bg-surface-tint hover:text-on-primary transition-colors mt-sm"
-            onClick={() => window.location.href = "/auth/login"}
-          >
-            Masuk
-          </button>
-        </div>
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            {/* Navigation links */}
+            <div className="flex flex-col gap-sm">
+              {navLinks.map((link) => {
+                const isActive = location.pathname === link.to;
+                return (
+                  <Link
+                    key={link.label}
+                    to={link.to}
+                    onClick={() => setMenuOpen(false)}
+                    className={
+                      isActive
+                        ? "text-brand-green font-bold bg-primary/10 px-md py-sm rounded-xl text-[16px] flex items-center justify-between"
+                        : "text-on-surface-variant hover:text-brand-green hover:bg-surface-container-low px-md py-sm rounded-xl text-[16px] transition-colors"
+                    }
+                  >
+                    <span>{link.label}</span>
+                    {isActive && <span className="material-symbols-outlined text-[18px]">chevron_right</span>}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* CTA action button at bottom */}
+            <div className="mt-auto pt-md border-t border-outline-variant">
+              <button
+                className="w-full bg-primary-container text-on-primary-container font-semibold text-[16px] px-md py-md rounded-xl hover:bg-surface-tint hover:text-on-primary transition-all active:scale-95"
+                onClick={() => {
+                  setMenuOpen(false);
+                  window.location.href = "/auth/login";
+                }}
+              >
+                Masuk
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </nav>
   );

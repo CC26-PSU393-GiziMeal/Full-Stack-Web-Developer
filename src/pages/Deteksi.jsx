@@ -88,45 +88,47 @@ export default function DeteksiPage() {
         </div>
 
         {/* Preview Grid */}
-        <div className="flex flex-col gap-md">
-          <h3 className="text-[14px] font-semibold tracking-wide text-on-surface">
-            Foto Terpilih ({images.length}/{MAX_IMAGES})
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-sm">
-            {images.map((img) => (
-              <div key={img.id} className="aspect-square rounded-xl bg-surface-container-high relative overflow-hidden group">
-                <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+        {images.length > 0 && (
+          <div className="flex flex-col gap-md">
+            <h3 className="text-[14px] font-semibold tracking-wide text-on-surface">
+              Foto Terpilih ({images.length}/{MAX_IMAGES})
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-sm">
+              {images.map((img) => (
+                <div key={img.id} className="aspect-square rounded-xl bg-surface-container-high relative overflow-hidden group">
+                  <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeImage(img.id); }}
+                    className="absolute top-xs right-xs bg-error text-on-error p-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <span className="material-symbols-outlined text-sm leading-none">close</span>
+                  </button>
+                </div>
+              ))}
+              {images.length < MAX_IMAGES && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); removeImage(img.id); }}
-                  className="absolute top-xs right-xs bg-error text-on-error p-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                  className="aspect-square border border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center text-outline hover:border-primary hover:text-primary hover:bg-surface-container-low transition-colors bg-surface-container-lowest"
                 >
-                  <span className="material-symbols-outlined text-sm leading-none">close</span>
+                  <span className="material-symbols-outlined mb-xs">add_photo_alternate</span>
+                  <span className="text-[12px] font-medium">Tambah Foto</span>
                 </button>
-              </div>
-            ))}
-            {images.length < MAX_IMAGES && (
-              <button
-                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                className="aspect-square border border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center text-outline hover:border-primary hover:text-primary hover:bg-surface-container-low transition-colors bg-surface-container-lowest"
-              >
-                <span className="material-symbols-outlined mb-xs">add_photo_alternate</span>
-                <span className="text-[12px] font-medium">Tambah Foto</span>
-              </button>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* CTA — centered per mockup */}
-          <div className="flex justify-center mt-lg">
-            <button
-              onClick={() => { if (images.length > 0) navigate("/deteksi/hasil"); }}
-              disabled={images.length === 0}
-              className="bg-primary text-on-primary text-[14px] font-semibold px-xl py-md rounded-xl flex items-center gap-sm hover:bg-surface-tint transition-colors active:scale-95 shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
-            >
-              <span className="material-symbols-outlined">troubleshoot</span>
-              Mulai Deteksi
-            </button>
+            {/* CTA — centered per mockup */}
+            <div className="flex justify-center mt-lg">
+              <button
+                onClick={() => { if (images.length > 0) navigate("/deteksi/hasil"); }}
+                disabled={images.length === 0}
+                className="bg-primary text-on-primary text-[14px] font-semibold px-xl py-md rounded-xl flex items-center gap-sm hover:bg-surface-tint transition-colors active:scale-95 shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
+              >
+                <span className="material-symbols-outlined">troubleshoot</span>
+                Mulai Deteksi
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       {/* ── Right Sidebar ────────────────────────────── */}

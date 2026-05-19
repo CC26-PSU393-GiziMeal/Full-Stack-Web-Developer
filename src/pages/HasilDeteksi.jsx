@@ -3,15 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 // Mock data — nanti diganti response dari BE
 const MOCK_RESULT = {
   success: true,
-  mode: "single",
-  filename: "apel.jpg",
-  prediction: {
-    detected_item: "Apple",
-    class_id: 0,
-    confidence_score: 0.9508,
-    confidence_percent: "95.08%",
-    predicted_kcal: 0.61
-  },
+  mode: "multiple",
+  predictions: [
+    {
+      detected_item: "Cabbage",
+      confidence_percent: "90.04%",
+      filename: "brokoli.jpg"
+    },
+    {
+      detected_item: "Chilli",
+      confidence_percent: "77.85%",
+      filename: "daging sapi.jpg"
+    }
+  ],
   menu_recommendations: [
     {
       rank: 1,
@@ -36,13 +40,10 @@ const MOCK_RESULT = {
   ],
 };
 
-const FILTERS = ["Semua", "Rendah Kalori", "Tinggi Protein", "Sesuai Target"];
-
 export default function HasilDeteksiPage() {
   const navigate = useNavigate();
   // Nanti: const { state } = useLocation() untuk terima data dari DeteksiPage
   const result = MOCK_RESULT;
-  const accuracyNum = parseFloat(result.prediction.confidence_percent);
 
   return (
     <main className="flex-grow w-full max-w-7xl mx-auto px-container-margin md:px-lg py-xl flex flex-col gap-xxl">
@@ -58,52 +59,42 @@ export default function HasilDeteksiPage() {
         </Link>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-xl lg:items-center justify-between border-b border-outline-variant pb-xl reveal">
-        {/* Left side */}
-        <div className="flex flex-col gap-sm lg:w-1/2">
-          <span className="text-label-sm text-on-surface-variant tracking-wider uppercase">Hasil Deteksi</span>
-          <h1 className="text-headline-xl text-on-surface flex items-center gap-2 flex-wrap">
-            Bahan terdeteksi: <span className="font-extrabold">{result.prediction.detected_item}</span>
+      <div className="flex flex-col gap-lg border-b border-outline-variant pb-xl reveal">
+        {/* Left side info */}
+        <div className="flex flex-col gap-sm">
+          <span className="text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">Hasil Deteksi</span>
+          <h1 className="text-[32px] md:text-[40px] leading-[48px] tracking-tight font-extrabold text-on-surface">
+            {result.predictions.length} bahan berhasil dikenali
           </h1>
-          <p className="text-body-lg text-on-surface-variant mt-xs">
-            Pilih salah satu rekomendasi menu di bawah untuk melihat resep, cara memasak, dan informasi gizinya.
+          <p className="text-[16px] text-on-surface-variant max-w-3xl mt-1">
+            Dari {result.predictions.length} gambar yang diunggah, berikut bahan yang terdeteksi beserta tingkat akurasinya.
           </p>
         </div>
 
-        {/* Right side (Main Result Card) */}
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-lg flex flex-wrap sm:flex-nowrap items-center gap-lg shadow-sm reveal-right">
-          <div className="flex flex-col items-center justify-center relative w-32 h-32 flex-shrink-0">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-surface-variant"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="text-primary-container transition-all duration-1000 ease-out"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                stroke="currentColor"
-                strokeDasharray={`${accuracyNum}, 100`}
-                strokeLinecap="round"
-                strokeWidth="4"
-              />
-            </svg>
-            <div className="absolute flex flex-col items-center justify-center text-center">
-              <span className="font-bold leading-none text-on-surface text-headline-lg">{result.prediction.confidence_percent}</span>
-              <span className="text-label-sm text-[10px] text-on-surface-variant tracking-wider mt-1 uppercase">Akurasi</span>
+        {/* Prediction Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-md mt-sm">
+          {result.predictions.map((pred, i) => (
+            <div
+              key={i}
+              className="bg-surface-container-lowest border border-outline-variant/60 rounded-2xl p-md flex items-center justify-between shadow-sm hover:shadow transition-shadow"
+            >
+              <div className="flex items-center gap-md">
+                {/* Index badge */}
+                <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center font-bold text-on-surface">
+                  {i + 1}
+                </div>
+                {/* Info */}
+                <div className="flex flex-col">
+                  <span className="text-title-md text-on-surface font-extrabold leading-snug">{pred.detected_item}</span>
+                  <span className="text-label-sm text-on-surface-variant font-medium mt-0.5">{pred.filename}</span>
+                </div>
+              </div>
+              {/* Accuracy percentage */}
+              <div className="text-title-md text-brand-green font-bold mr-sm">
+                {pred.confidence_percent}
+              </div>
             </div>
-          </div>
-          <div className="hidden sm:block w-px h-24 bg-outline-variant"></div>
-          <div className="flex flex-col gap-xs">
-            <span className="text-label-sm text-on-surface-variant tracking-wider uppercase">Bahan Terdeteksi</span>
-            <h3 className="text-title-md text-on-surface font-extrabold">{result.prediction.detected_item}</h3>
-            <p className="text-label-md text-primary-container flex items-center gap-xs">
-              <span className="material-symbols-outlined text-[18px]">image</span>{result.filename}
-            </p>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -118,21 +109,6 @@ export default function HasilDeteksiPage() {
             <p className="text-label-sm text-on-surface-variant mt-xs italic">
               Klik salah satu menu untuk melihat resep lengkap dan informasi gizinya.
             </p>
-          </div>
-          {/* Filters */}
-          <div className="flex items-center gap-sm overflow-x-auto pb-xs">
-            {FILTERS.map((f, i) => (
-              <button
-                key={f}
-                className={`whitespace-nowrap text-label-sm font-semibold tracking-wide px-md py-sm rounded-full border transition-all duration-300 active:scale-95 ${
-                  i === 0
-                    ? "bg-primary text-on-primary border-primary hover:bg-primary-container"
-                    : "bg-surface-container text-on-surface-variant border-outline-variant hover:bg-surface-variant"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
           </div>
         </div>
 

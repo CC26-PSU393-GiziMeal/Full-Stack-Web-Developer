@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ChatbotFAB from "./components/ChatbotFAB";
 
 // Pages
 import HomePage          from "./pages/Home";
@@ -127,6 +128,7 @@ function App() {
         </div>
       )}
 
+      <ChatbotFAB />
       <Footer />
     </div>
   );
