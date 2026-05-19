@@ -1,0 +1,227 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-surface-container: #edeeef;
+  --color-primary-container: #1b4332;
+  --color-tertiary-fixed-dim: #75daa8;
+  --color-on-tertiary-fixed-variant: #005235;
+  --color-surface-container-high: #e7e8e9;
+  --color-surface-tint: #3f6653;
+  --color-inverse-on-surface: #f0f1f2;
+  --color-on-tertiary-fixed: #002113;
+  --color-secondary-fixed: #b1f0ce;
+  --color-on-secondary-fixed-variant: #0e5138;
+  --color-surface-dim: #d9dadb;
+  --color-secondary-fixed-dim: #95d4b3;
+  --color-inverse-primary: #a5d0b9;
+  --color-on-background: #191c1d;
+  --color-on-surface-variant: #414844;
+  --color-inverse-surface: #2e3132;
+  --color-surface-container-low: #f3f4f5;
+  --color-surface-container-highest: #e1e3e4;
+  --color-primary-fixed: #c1ecd4;
+  --color-outline-variant: #c1c8c2;
+  --color-secondary: #2c694e;
+  --color-tertiary: #002d1b;
+  --color-on-tertiary: #ffffff;
+  --color-on-primary-fixed-variant: #274e3d;
+  --color-primary-fixed-dim: #a5d0b9;
+  --color-tertiary-fixed: #92f7c3;
+  --color-on-secondary-fixed: #002114;
+  --color-outline: #717973;
+  --color-on-secondary-container: #316e52;
+  --color-background: #f8f9fa;
+  --color-on-surface: #191c1d;
+  --color-secondary-container: #aeeecb;
+  --color-surface-variant: #e1e3e4;
+  --color-on-primary-container: #86af99;
+  --color-on-primary-fixed: #002114;
+  --color-surface: #f8f9fa;
+  --color-surface-bright: #f8f9fa;
+  --color-primary: #012d1d;
+  --color-on-tertiary-container: #53b889;
+  --color-on-primary: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-secondary: #ffffff;
+  --color-brand-green: #005236;
+}
+
+.dark {
+  --color-surface-container: #201f1f;
+  --color-primary-container: #2dffb3;
+  --color-tertiary-fixed-dim: #a5d0b9;
+  --color-on-tertiary-fixed-variant: #274e3d;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-tint: #00e29c;
+  --color-inverse-on-surface: #313030;
+  --color-on-tertiary-fixed: #002114;
+  --color-secondary-fixed: #a0f4c8;
+  --color-on-secondary-fixed-variant: #005236;
+  --color-surface-dim: #131313;
+  --color-secondary-fixed-dim: #85d7ad;
+  --color-inverse-primary: #006c49;
+  --color-on-background: #e5e2e1;
+  --color-on-surface-variant: #b9cbbe;
+  --color-inverse-surface: #e5e2e1;
+  --color-surface-container-low: #1c1b1b;
+  --color-surface-container-highest: #353534;
+  --color-primary-fixed: #48ffb6;
+  --color-outline-variant: #3b4a41;
+  --color-secondary: #85d7ad;
+  --color-tertiary: #fafff9;
+  --color-on-tertiary: #0e3727;
+  --color-on-primary-fixed-variant: #005236;
+  --color-primary-fixed-dim: #00e29c;
+  --color-tertiary-fixed: #c1ecd4;
+  --color-on-secondary-fixed: #002113;
+  --color-outline: #84958a;
+  --color-on-secondary-container: #8fe2b7;
+  --color-background: #131313;
+  --color-on-surface: #e5e2e1;
+  --color-secondary-container: #026745;
+  --color-surface-variant: #353534;
+  --color-on-primary-container: #00724d;
+  --color-on-primary-fixed: #002113;
+  --color-surface: #131313;
+  --color-surface-bright: #393939;
+  --color-primary: #fbfff9;
+  --color-on-tertiary-container: #446c58;
+  --color-on-primary: #003824;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-on-secondary: #003824;
+  --color-brand-green: #2dffb3;
+}
+
+* {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-on-background);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-364px * 4)); }
+}
+
+.animate-scroll {
+  animation: scroll 40s linear infinite;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Custom premium transitions and entrance animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in-right {
+  opacity: 0;
+  animation: slideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger delay utilities */
+.delay-75 { animation-delay: 75ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+
+/* Micro-interaction hover cards */
+.hover-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -12px rgba(1, 45, 29, 0.08);
+}
+
+/* Scroll Reveal animations (entering/exiting) */
+.reveal, .reveal-left, .reveal-right, .reveal-scale {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.reveal {
+  transform: translateY(32px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-left {
+  transform: translateX(-32px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-right {
+  transform: translateX(32px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-scale {
+  transform: scale(0.95);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* In view styles */
+.reveal.in-view, .reveal-scale.in-view {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.reveal-left.in-view, .reveal-right.in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Staggered delay helpers for reveals */
+.reveal-delay-50  { transition-delay: 50ms; }
+.reveal-delay-100 { transition-delay: 100ms; }
+.reveal-delay-150 { transition-delay: 150ms; }
+.reveal-delay-200 { transition-delay: 200ms; }
+.reveal-delay-250 { transition-delay: 250ms; }
+.reveal-delay-300 { transition-delay: 300ms; }
+.reveal-delay-400 { transition-delay: 400ms; }
