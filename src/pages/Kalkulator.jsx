@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // ── Konstanta PAL ──────────────────────────────────────────────────
 const ACTIVITY_LEVELS = [
@@ -70,6 +71,27 @@ function ResultCard({ label, value, unit, variant = "default", sub }) {
 
 // ── Main Page ──────────────────────────────────────────────────────
 export default function KalkulatorPage() {
+   const isLogged = !!localStorage.getItem('authToken');
+   const navigate = useNavigate();
+
+  // If not logged, show lock screen similar to Database page
+  if (!isLogged) {
+    return (
+      <main className="flex flex-col items-center justify-center min-h-screen p-8">
+        <h2 className="text-2xl font-bold text-primary mb-4">Akses Terbatas</h2>
+        <p className="mb-6 text-center text-on-surface-variant max-w-md">
+          Untuk menggunakan kalkulator, silakan masuk terlebih dahulu.
+        </p>
+        <button
+          className="bg-primary-container text-on-primary-container font-semibold px-md py-sm rounded-lg hover:bg-surface-tint hover:text-on-primary transition-colors"
+          onClick={() => navigate('/auth/login')}
+        >
+          Masuk
+        </button>
+      </main>
+    );
+  }
+
   const [form, setForm] = useState({
     gender: "",
     usia: "",

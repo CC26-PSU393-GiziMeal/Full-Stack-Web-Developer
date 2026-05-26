@@ -25,12 +25,14 @@ export default function LoginPage() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
-    setIsLoading(true);
-    // TODO: Integrate Supabase Auth
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/");
-    }, 1200);
+      setIsLoading(true);
+      // Simulate authentication and store token
+      setTimeout(() => {
+        setIsLoading(false);
+        // Store a dummy auth token for session persistence
+        localStorage.setItem('authToken', 'demo-token');
+        navigate('/');
+      }, 1200);
   };
 
   const inputBase =

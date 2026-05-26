@@ -80,21 +80,23 @@ function App() {
     <div className="min-h-screen flex flex-col bg-background text-on-background">
       <Navbar darkMode={darkMode} toggleDark={toggleDark} />
 
-      <Routes>
-        <Route path="/"                  element={<HomePage />} />
-        <Route path="/deteksi"           element={<DeteksiPage />} />
-        <Route path="/deteksi/hasil"     element={<HasilDeteksiPage />} />
-        <Route path="/deteksi/resep/:id" element={<DetailResepPage />} />
-        <Route path="/kalkulator"        element={<KalkulatorPage />} />
-        <Route path="/database"          element={<DatabaseGiziPage />} />
-        <Route path="/tentang"           element={<TentangPage />} />
-        <Route path="/referensi"         element={<ReferensiPage/>} />
-        <Route path="/faq"               element={<FAQPage/>} />
-        <Route path="/auth/login"        element={<LoginPage/>} />
-        <Route path="/auth/register"     element={<RegisterPage/>} />
-        <Route path="/not-found"          element={<NotFoundPage />} />
-        <Route path="*"                  element={<PlaceholderPage title="404 — Halaman tidak ditemukan" />} />
-      </Routes>
+      <div className="pt-16">
+        <Routes>
+          <Route path="/"                  element={<HomePage />} />
+          <Route path="/deteksi"           element={<DeteksiPage />} />
+          <Route path="/deteksi/hasil"     element={<HasilDeteksiPage />} />
+          <Route path="/deteksi/resep/:id" element={<DetailResepPage />} />
+          <Route path="/kalkulator"        element={<KalkulatorPage />} />
+          <Route path="/database"          element={<DatabaseGiziPage />} />
+          <Route path="/tentang"           element={<TentangPage />} />
+          <Route path="/referensi"         element={<ReferensiPage />} />
+          <Route path="/faq"               element={<FAQPage />} />
+          <Route path="/auth/login"        element={<LoginPage />} />
+          <Route path="/auth/register"     element={<RegisterPage />} />
+          <Route path="/not-found"          element={<NotFoundPage />} />
+          <Route path="*"                  element={<PlaceholderPage title="404 — Halaman tidak ditemukan" />} />
+        </Routes>
+      </div>
 
       {/* Disclaimer Banner Global */}
       {!location.pathname.startsWith("/auth") && !location.pathname.startsWith("/dashboard") && (

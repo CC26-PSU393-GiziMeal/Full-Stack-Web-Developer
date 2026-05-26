@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const navLinks = [
   { label: "Beranda", to: "/" },
@@ -14,10 +14,28 @@ const navLinks = [
 export default function Navbar({ darkMode, toggleDark }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const [showNav, setShowNav] = useState(true);
+  const [scrollY, setScrollY] = useState(0);
+  const prevScroll = useRef(0);
+  const isLogged = !!localStorage.getItem('authToken');
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const cur = window.scrollY;
+      const scrollingDown = cur > prevScroll.current;
+      setShowNav(!scrollingDown || cur < 50);
+      setScrollY(cur);
+      prevScroll.current = cur;
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navBackgroundClass = showNav ? (scrollY < 50 ? 'bg-transparent' : 'bg-surface/80 backdrop-blur-md') : '-translate-y-full';
   return (
     <>
-      <nav className="bg-surface/80 backdrop-blur-md shadow-sm border-b border-outline-variant sticky top-0 z-50">
+      <nav className={`fixed top-0 w-full z-50 transition-transform duration-300 ${navBackgroundClass}`}>
         <div className="flex justify-between items-center w-full px-lg py-md max-w-7xl mx-auto">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 text-brand-green font-bold text-[20px]">
@@ -66,11 +84,24 @@ export default function Navbar({ darkMode, toggleDark }) {
             >
               <span className="material-symbols-outlined">account_circle</span>
             </button>
-            <button className="bg-primary-container text-on-primary-container font-semibold text-[14px] px-md py-sm rounded-lg hover:bg-surface-tint hover:text-on-primary transition-colors active:scale-95 hidden md:block"
-              onClick={() => window.location.href = "/auth/login"}
-            >
-              Masuk
-            </button>
+            {isLogged ? (
+              <button
+                className="bg-primary-container text-on-primary-container font-semibold text-[14px] px-md py-sm rounded-lg hover:bg-surface-tint hover:text-on-primary transition-colors active:scale-95 hidden md:block"
+                onClick={() => {
+                  localStorage.removeItem('authToken');
+                  navigate('/');
+                }}
+              >
+                Logout
+              </button>
+            ) : (
+              <button
+                className="bg-primary-container text-on-primary-container font-semibold text-[14px] px-md py-sm rounded-lg hover:bg-surface-tint hover:text-on-primary transition-colors active:scale-95 hidden md:block"
+                onClick={() => window.location.href = "/auth/login"}
+              >
+                Masuk
+              </button>
+            )}
             {/* Mobile hamburger */}
             <button
               className="md:hidden text-on-surface p-1"
@@ -134,15 +165,28 @@ export default function Navbar({ darkMode, toggleDark }) {
 
             {/* CTA action button at bottom */}
             <div className="mt-auto pt-md border-t border-outline-variant">
-              <button
-                className="w-full bg-primary-container text-on-primary-container font-semibold text-[16px] px-md py-md rounded-xl hover:bg-surface-tint hover:text-on-primary transition-all active:scale-95"
-                onClick={() => {
-                  setMenuOpen(false);
-                  window.location.href = "/auth/login";
-                }}
-              >
-                Masuk
-              </button>
+              {isLogged ? (
+                <button
+                  className="w-full bg-primary-container text-on-primary-container font-semibold text-[16px] px-md py-md rounded-xl hover:bg-surface-tint hover:text-on-primary transition-all active:scale-95"
+                  onClick={() => {
+                    localStorage.removeItem('authToken');
+                    setMenuOpen(false);
+                    navigate('/');
+                  }}
+                >
+                  Logout
+                </button>
+              ) : (
+                <button
+                  className="w-full bg-primary-container text-on-primary-container font-semibold text-[16px] px-md py-md rounded-xl hover:bg-surface-tint hover:text-on-primary transition-all active:scale-95"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    window.location.href = "/auth/login";
+                  }}
+                >
+                  Masuk
+                </button>
+              )}
             </div>
           </div>
         </>

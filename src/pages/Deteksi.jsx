@@ -10,7 +10,25 @@ export default function DeteksiPage() {
   const [images, setImages] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
-  const navigate = useNavigate();
+  const isLogged = !!localStorage.getItem('authToken');
+
+  // If not logged, show lock screen
+  if (!isLogged) {
+    return (
+      <main className="flex flex-col items-center justify-center min-h-screen p-8">
+        <h2 className="text-2xl font-bold text-primary mb-4">Akses Terbatas</h2>
+        <p className="mb-6 text-center text-on-surface-variant max-w-md">
+          Untuk menggunakan fitur deteksi, silakan masuk terlebih dahulu.
+        </p>
+        <button
+          className="bg-primary-container text-on-primary-container font-semibold px-md py-sm rounded-lg hover:bg-surface-tint hover:text-on-primary transition-colors"
+          onClick={() => navigate('/auth/login')}
+        >
+          Masuk
+        </button>
+      </main>
+    );
+  }
   const MAX_IMAGES = 15;
 
   const addFiles = (files) => {

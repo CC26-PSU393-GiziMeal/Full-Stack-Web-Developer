@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 
 // ── Mock data — nanti diganti fetch dari Supabase/CSV ──────────────
 const MOCK_DATA = [
@@ -64,6 +65,27 @@ function buildPages(total, current) {
 
 // ── Main Page ──────────────────────────────────────────────────────
 export default function DatabaseGiziPage() {
+  const navigate = useNavigate();
+  const isLogged = !!localStorage.getItem('authToken');
+
+  // If not logged, show lock screen
+  if (!isLogged) {
+    return (
+      <main className="flex flex-col items-center justify-center min-h-screen p-8">
+        <h2 className="text-2xl font-bold text-primary mb-4">Akses Terbatas</h2>
+        <p className="mb-6 text-center text-on-surface-variant max-w-md">
+          Untuk melihat database gizi, silakan masuk terlebih dahulu.
+        </p>
+        <button
+          className="bg-primary-container text-on-primary-container font-semibold px-md py-sm rounded-lg hover:bg-surface-tint hover:text-on-primary transition-colors"
+          onClick={() => navigate('/auth/login')}
+        >
+          Masuk
+        </button>
+      </main>
+    );
+  }
+
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("default");
   const [page, setPage] = useState(1);
@@ -155,9 +177,9 @@ export default function DatabaseGiziPage() {
         </div>
 
         {/* Table layout */}
-        <div className="min-w-[1000px]">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-surface-container-low font-label-md text-label-md text-on-surface border-b border-outline-variant">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full table-auto text-left border-collapse">
+              <thead className="bg-surface-container-low font-label-md text-label-md text-on-surface border-b border-outline-variant">
               <tr>
                 <th className="px-lg py-md font-bold w-16">No</th>
                 <th className="px-lg py-md font-bold">Food Items</th>
