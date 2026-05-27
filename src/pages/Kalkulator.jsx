@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 // ── Konstanta PAL ──────────────────────────────────────────────────
@@ -74,7 +74,21 @@ export default function KalkulatorPage() {
    const isLogged = !!localStorage.getItem('authToken');
    const navigate = useNavigate();
 
-  // If not logged, show lock screen similar to Database page
+   // Load saved profile from localStorage on mount
+   useEffect(() => {
+     const saved = localStorage.getItem('kalkulatorProfile');
+     if (saved) {
+       try {
+         const data = JSON.parse(saved);
+         if (data.form) setForm(data.form);
+         if (data.hasil) setHasil(data.hasil);
+       } catch (e) {
+         console.error('Failed to parse saved profile', e);
+       }
+     }
+   }, []);
+
+   // If not logged, show lock screen similar to Database page
   if (!isLogged) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen p-8">
@@ -129,6 +143,13 @@ export default function KalkulatorPage() {
   function reset() {
     setForm({ gender: "", usia: "", berat: "", tinggi: "", aktivitas: "", tujuan: "tahan" });
     setHasil(null);
+  }
+
+  // Save current profile to localStorage
+  function saveProfile() {
+    const data = { form, hasil };
+    localStorage.setItem('kalkulatorProfile', JSON.stringify(data));
+    alert('Profil berhasil disimpan');
   }
 
   const inputClass =
@@ -280,7 +301,7 @@ export default function KalkulatorPage() {
                 Hitung Sekarang
               </button>
               <button
-                onClick={reset}
+                onClick={saveProfile}
                 className="flex-1 bg-secondary-fixed text-on-secondary-fixed text-[14px] font-semibold py-md px-lg rounded-lg hover:bg-secondary-fixed-dim transition-all active:scale-[0.98] flex justify-center items-center gap-sm"
               >
                 <span className="material-symbols-outlined text-[20px]">bookmark</span>

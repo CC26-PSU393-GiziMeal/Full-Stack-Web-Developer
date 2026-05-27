@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 // Mock user data — nanti diganti dari API/Supabase
@@ -21,6 +21,18 @@ function getInitials(name) {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const isLogged = !!localStorage.getItem("authToken");
+  const [calcData, setCalcData] = useState(null);
+  useEffect(() => {
+    const saved = localStorage.getItem('kalkulatorProfile');
+    if (saved) {
+      try {
+        setCalcData(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse kalkulator profile', e);
+      }
+    }
+  }, []);
+
   const user = MOCK_USER;
 
   // Redirect kalau belum login
@@ -41,6 +53,7 @@ export default function ProfilePage() {
     );
   }
 
+  const formatNum = (n) => n?.toLocaleString('id-ID');
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     navigate("/");
@@ -71,7 +84,7 @@ export default function ProfilePage() {
     <main className="flex-grow w-full max-w-3xl mx-auto px-container-margin md:px-lg py-xl md:py-xxl space-y-lg">
 
       {/* ── Avatar & Info ── */}
-      <section className="flex flex-col items-center text-center gap-md reveal">
+      <section className="flex flex-col items-center text-center gap-md">
 
         {/* Avatar */}
         <div className="relative">
@@ -167,6 +180,24 @@ export default function ProfilePage() {
           ))}
         </div>
       </section>
+
+      {/* ── Kalkulator Data (if saved) ── */}
+      {calcData && calcData.hasil && (
+        <section className="bg-surface-container-low rounded-[24px] border border-outline-variant p-lg space-y-md reveal reveal-delay-300">
+          <h2 className="font-title-md text-title-md text-primary font-semibold flex items-center gap-sm">
+            <span className="material-symbols-outlined text-[22px]">calculate</span>
+            Data Kalkulator Terakhir
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
+            <p><strong>Target:</strong> {formatNum(calcData.hasil.target)} kkal</p>
+            <p><strong>TDEE:</strong> {formatNum(calcData.hasil.tdee)} kkal</p>
+            <p><strong>BMR:</strong> {formatNum(calcData.hasil.bmr)} kkal</p>
+            <p><strong>Karbo:</strong> {calcData.hasil.karbo} g</p>
+            <p><strong>Protein:</strong> {calcData.hasil.protein} g</p>
+            <p><strong>Lemak:</strong> {calcData.hasil.lemak} g</p>
+          </div>
+        </section>
+      )}
 
       {/* ── Logout ── */}
       <section className="pt-sm reveal reveal-delay-300">
