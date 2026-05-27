@@ -17,6 +17,7 @@ import FAQPage           from "./pages/FAQ";
 import LoginPage         from "./pages/Login";
 import RegisterPage      from "./pages/Register";
 import NotFoundPage      from "./pages/NotFound";
+import ProfilePage from "./pages/Profile";
 
 function PlaceholderPage({ title }) {
   return (
@@ -93,7 +94,8 @@ function App() {
           <Route path="/faq"               element={<FAQPage />} />
           <Route path="/auth/login"        element={<LoginPage />} />
           <Route path="/auth/register"     element={<RegisterPage />} />
-          <Route path="/not-found"          element={<NotFoundPage />} />
+          <Route path="/profile"           element={<ProfilePage />} />
+          <Route path="/not-found"         element={<NotFoundPage />} />
           <Route path="*"                  element={<PlaceholderPage title="404 — Halaman tidak ditemukan" />} />
         </Routes>
       </div>

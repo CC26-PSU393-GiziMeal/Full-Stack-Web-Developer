@@ -80,6 +80,7 @@ export default function Navbar({ darkMode, toggleDark }) {
             </button>
             <button
               aria-label="Account"
+              onClick={() => navigate(isLogged ? "/profile" : "/auth/login")}
               className="text-on-surface hover:text-brand-green hover:bg-surface-container-low transition-all duration-200 p-1 rounded-full active:scale-95"
             >
               <span className="material-symbols-outlined">account_circle</span>

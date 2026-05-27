@@ -28,24 +28,34 @@ export default function ReferensiPage() {
           Peraturan Menteri Kesehatan RI
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-          <div className="bg-surface-container-low p-lg rounded-[24px] border border-outline-variant hover-lift cursor-pointer group">
+          <a
+            href="https://peraturan.go.id/id/permenkes-no-28-tahun-2019"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-surface-container-low p-lg rounded-[24px] border border-outline-variant hover-lift cursor-pointer group no-underline block"
+          >
             <div className="flex justify-between items-start mb-sm">
-              <h3 className="font-title-md text-title-md text-primary group-hover:text-primary-fixed transition-colors font-semibold">Permenkes No. 28 Tahun 2019</h3>
-              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary-fixed transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 text-[20px]">arrow_outward</span>
+              <h3 className="font-title-md text-title-md text-primary group-hover:text-secondary transition-colors font-semibold">Permenkes No. 28 Tahun 2019</h3>
+              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-secondary transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 text-[20px]">arrow_outward</span>
             </div>
             <p className="font-body-md text-body-md text-on-surface-variant">
               Tentang Angka Kecukupan Gizi (AKG) yang dianjurkan untuk Masyarakat Indonesia. Menjadi basis perhitungan kebutuhan energi, protein, lemak, karbohidrat, dan mikronutrien lainnya.
             </p>
-          </div>
-          <div className="bg-surface-container-low p-lg rounded-[24px] border border-outline-variant hover-lift cursor-pointer group">
+          </a>
+          <a
+            href="https://peraturan.go.id/id/permenkes-no-41-tahun-2014"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-surface-container-low p-lg rounded-[24px] border border-outline-variant hover-lift cursor-pointer group no-underline block"
+          >
             <div className="flex justify-between items-start mb-sm">
-              <h3 className="font-title-md text-title-md text-primary group-hover:text-primary-fixed transition-colors font-semibold">Permenkes No. 41 Tahun 2014</h3>
-              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary-fixed transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 text-[20px]">arrow_outward</span>
+              <h3 className="font-title-md text-title-md text-primary group-hover:text-secondary transition-colors font-semibold">Permenkes No. 41 Tahun 2014</h3>
+              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-secondary transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 text-[20px]">arrow_outward</span>
             </div>
             <p className="font-body-md text-body-md text-on-surface-variant">
               Tentang Pedoman Gizi Seimbang. Menjadi acuan dalam penyusunan rekomendasi porsi makan, jenis makanan, dan pola hidup sehat yang terintegrasi dalam platform GiziMeal.
             </p>
-          </div>
+          </a>
         </div>
       </section>
 
@@ -60,19 +70,25 @@ export default function ReferensiPage() {
             {
               title: "WHO Healthy Diet (2020)",
               desc: "Panduan diet sehat dari World Health Organization untuk pencegahan malnutrisi dan penyakit tidak menular (NCDs).",
+              url: "https://www.who.int/news-room/fact-sheets/detail/healthy-diet",
             },
             {
               title: "Mifflin–St Jeor (1990)",
               desc: '"A new predictive equation for resting energy expenditure in healthy individuals." — Dasar perhitungan Basal Metabolic Rate (BMR) di GiziMeal.',
+              url: "https://pubmed.ncbi.nlm.nih.gov/2305711/",
             },
             {
               title: "FAO/WHO/UNU (2001)",
               desc: '"Human energy requirements." — Referensi untuk nilai Physical Activity Level (PAL) dan Total Daily Energy Expenditure (TDEE).',
+              url: "https://www.fao.org/3/a-y5686e.pdf",
             },
           ].map((pub) => (
-            <div
+            <a
               key={pub.title}
-              className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant hover:border-secondary transition-colors cursor-pointer group hover-lift flex flex-col justify-between"
+              href={pub.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant hover:border-secondary transition-colors cursor-pointer group hover-lift flex flex-col justify-between no-underline block"
             >
               <div>
                 <div className="flex justify-between items-start mb-sm">
@@ -83,7 +99,7 @@ export default function ReferensiPage() {
                 </div>
                 <p className="font-body-md text-body-md text-on-surface-variant">{pub.desc}</p>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </section>
@@ -135,7 +151,10 @@ export default function ReferensiPage() {
           <div className="bg-surface-container-lowest p-lg rounded-[24px] border border-outline-variant flex flex-col justify-between hover-lift">
             <div>
               <h3 className="font-title-md text-title-md font-bold mb-lg text-primary">BMR (Basal Metabolic Rate)</h3>
-              <p className="font-body-md text-body-md text-on-surface-variant mb-md">Mifflin-St Jeor Equation (1990)</p>
+              <p className="font-body-md text-body-md text-on-surface-variant mb-sm">Mifflin-St Jeor Equation (1990)</p>
+              <p className="font-body-md text-body-md text-on-surface-variant mb-md">
+                <strong className="text-primary">BMR (Basal Metabolic Rate)</strong> adalah jumlah kalori minimum yang dibutuhkan tubuh untuk menjalankan fungsi dasar seperti bernapas, sirkulasi darah, dan regulasi suhu — saat tubuh dalam kondisi istirahat penuh.
+             </p>
               <div className="space-y-md">
                 {[
                   {
@@ -173,9 +192,12 @@ export default function ReferensiPage() {
             <h3 className="font-title-md text-title-md font-medium text-primary mb-sm">
               TDEE (Total Daily Energy Expenditure)
             </h3>
-            <div className="font-mono text-sm bg-surface-container-low border border-surface-container-high p-sm rounded-lg inline-flex items-center gap-sm mb-lg text-on-surface-variant w-fit">
+            <div className="font-mono text-sm bg-surface-container-low border border-surface-container-high p-sm rounded-lg inline-flex items-center gap-sm mb-md text-on-surface-variant w-fit">
               <span className="text-secondary font-bold">TDEE</span> = <span className="text-primary font-bold">BMR</span> × <span className="text-primary font-bold">PAL</span>
             </div>
+              <p className="font-body-md text-body-md text-on-surface-variant mb-lg">
+                <strong className="text-primary">PAL (Physical Activity Level)</strong> adalah faktor pengali yang mencerminkan tingkat aktivitas fisik harian seseorang. Semakin tinggi aktivitas, semakin besar kebutuhan energi total per hari.
+              </p>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -206,13 +228,13 @@ export default function ReferensiPage() {
             <h3 className="font-title-md text-title-md text-primary mb-sm font-semibold">Target Kalori Harian</h3>
             <ul className="space-y-sm list-disc pl-md font-body-md text-body-md text-on-surface-variant">
               <li>
-                <strong className="text-primary">Weight Loss (Penurunan Berat Badan):</strong> TDEE − 500 kcal
+                <strong className="text-primary">Weight Loss (Penurunan Berat Badan):</strong> <span className="font-mono">TDEE − 500 kcal</span>
               </li>
               <li>
-                <strong className="text-primary">Maintenance (Pemeliharaan):</strong> = TDEE
+                <strong className="text-primary">Maintenance (Pemeliharaan):</strong> <span className="font-mono">= TDEE</span>
               </li>
               <li>
-                <strong className="text-primary">Weight Gain (Penaikan Berat Badan):</strong> TDEE + 500 kcal
+                <strong className="text-primary">Weight Gain (Penaikan Berat Badan):</strong> <span className="font-mono">TDEE + 500</span>TDEE + 500 kcal
               </li>
             </ul>
           </div>
@@ -235,14 +257,6 @@ export default function ReferensiPage() {
         <div className="bg-surface-container-low p-md rounded-xl font-body-md text-body-md text-on-surface-variant">
           <strong className="text-primary">Catatan Sitasi: </strong>
           Referensi di atas merupakan sumber data dan metodologi yang digunakan dalam pengembangan sistem GiziMeal. Kami berkomitmen untuk selalu memperbarui basis data kami sesuai dengan temuan ilmiah terbaru dan regulasi pemerintah yang berlaku.
-        </div>
-
-        <div className="bg-error-container/30 border border-error/20 p-md rounded-xl font-body-md text-body-md text-on-surface-variant flex gap-sm">
-          <span className="material-symbols-outlined text-error mt-0.5 flex-shrink-0">warning</span>
-          <p>
-            <strong className="text-error block mb-1 font-bold">Disclaimer Medis:</strong>
-            Hasil perhitungan dan rekomendasi yang diberikan oleh GiziMeal bersifat informatif dan didasarkan pada perhitungan standar. GiziMeal bukan pengganti nasihat medis profesional, diagnosis, atau perawatan. Selalu konsultasikan dengan dokter atau ahli gizi terdaftar untuk kebutuhan diet khusus atau kondisi medis Anda.
-          </p>
         </div>
       </section>
     </main>

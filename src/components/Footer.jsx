@@ -17,13 +17,6 @@ const NAV_COLS = [
       { label: "About", to: "/tentang" },
     ],
   },
-  {
-    title: "Legal",
-    links: [
-      { label: "Kebijakan Privasi", to: "#" },
-      { label: "Syarat & Ketentuan", to: "#" },
-    ],
-  },
 ];
 
 export default function Footer() {
@@ -42,8 +35,8 @@ export default function Footer() {
               <span className="text-[20px] font-bold text-primary-container">GiziMeal</span>
             </div>
             <p className="text-[16px] text-on-surface-variant mb-md leading-relaxed">
-              Solusi cerdas berbasis edukasi gizi untuk mendukung gaya hidup sehat
-              masyarakat Indonesia sesuai standar nasional.
+              Platform edukasi gizi untuk mengenali bahan makanan, menyajikan informasi gizi, 
+              dan menyusun rekomendasi menu gizi seimbang berdasarkan pedoman resmi.
             </p>
             <div className="flex gap-md">
               {["public", "mail", "share"].map((icon) => (
@@ -83,7 +76,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-outline-variant pt-lg flex flex-col md:flex-row justify-between items-center gap-md">
           <p className="text-[12px] text-on-surface-variant italic">
-            © 2024 GiziMeal. Berdasarkan standar AKG Kemenkes 2019 (Scientific Disclaimer).
+            © 2026 GiziMeal. Berdasarkan standar AKG Kemenkes 2019 (Scientific Disclaimer).
           </p>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
