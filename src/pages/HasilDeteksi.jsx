@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 // Mock data — nanti diganti response dari BE
 const MOCK_RESULT = {
@@ -42,8 +42,11 @@ const MOCK_RESULT = {
 
 export default function HasilDeteksiPage() {
   const navigate = useNavigate();
-  // Nanti: const { state } = useLocation() untuk terima data dari DeteksiPage
-  const result = MOCK_RESULT;
+  const location = useLocation();
+  const result = location.state?.result || MOCK_RESULT;
+
+  const isSingle = result.predictions?.length === 1;
+  const singlePred = isSingle ? result.predictions[0] : null;
 
   return (
     <main className="flex-grow w-full max-w-7xl mx-auto px-container-margin md:px-lg py-xl flex flex-col gap-xxl">
@@ -59,44 +62,97 @@ export default function HasilDeteksiPage() {
         </Link>
       </div>
 
-      <div className="flex flex-col gap-lg border-b border-outline-variant pb-xl reveal">
-        {/* Left side info */}
-        <div className="flex flex-col gap-sm">
-          <span className="text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">Hasil Deteksi</span>
-          <h1 className="text-[32px] md:text-[40px] leading-[48px] tracking-tight font-extrabold text-on-surface">
-            {result.predictions.length} bahan berhasil dikenali
-          </h1>
-          <p className="text-[16px] text-on-surface-variant max-w-3xl mt-1">
-            Dari {result.predictions.length} gambar yang diunggah, berikut bahan yang terdeteksi beserta tingkat akurasinya.
-          </p>
-        </div>
-
-        {/* Prediction Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-md mt-sm">
-          {result.predictions.map((pred, i) => (
-            <div
-              key={i}
-              className="bg-surface-container-lowest border border-outline-variant/60 rounded-2xl p-md flex items-center justify-between shadow-sm hover:shadow transition-shadow"
-            >
-              <div className="flex items-center gap-md">
-                {/* Index badge */}
-                <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center font-bold text-on-surface">
-                  {i + 1}
-                </div>
-                {/* Info */}
-                <div className="flex flex-col">
-                  <span className="text-title-md text-on-surface font-extrabold leading-snug">{pred.detected_item}</span>
-                  <span className="text-label-sm text-on-surface-variant font-medium mt-0.5">{pred.filename}</span>
+      {isSingle ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-xl items-center border-b border-outline-variant pb-xl reveal">
+          <div className="lg:col-span-8 flex flex-col gap-sm">
+            <span className="text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">Hasil Deteksi</span>
+            <h1 className="text-[32px] md:text-[40px] leading-[48px] tracking-tight font-extrabold text-on-surface">
+              Bahan terdeteksi: {singlePred.detected_item}
+            </h1>
+            <p className="text-[16px] text-on-surface-variant max-w-2xl mt-1 leading-relaxed">
+              Pilih salah satu rekomendasi menu di bawah untuk melihat resep, cara memasak, dan informasi gizinya.
+            </p>
+          </div>
+          <div className="lg:col-span-4">
+            <div className="flex items-center gap-md bg-surface-container-lowest border border-outline-variant rounded-2xl p-md shadow-sm">
+              <div className="relative w-20 h-20 flex-shrink-0">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="34"
+                    className="stroke-surface-container"
+                    strokeWidth="6"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="34"
+                    className="stroke-primary-container dark:stroke-primary"
+                    strokeWidth="6"
+                    fill="transparent"
+                    strokeDasharray={2 * Math.PI * 34}
+                    strokeDashoffset={2 * Math.PI * 34 * (1 - parseFloat(singlePred.confidence_percent) / 100)}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[16px] font-bold text-on-surface">{singlePred.confidence_percent}</span>
+                  <span className="text-[8px] text-on-surface-variant font-semibold tracking-wider uppercase">Akurasi</span>
                 </div>
               </div>
-              {/* Accuracy percentage */}
-              <div className="text-title-md text-brand-green font-bold mr-sm">
-                {pred.confidence_percent}
+              <div className="flex flex-col">
+                <span className="text-[11px] text-on-surface-variant font-semibold uppercase tracking-wider">Bahan Terdeteksi</span>
+                <span className="text-[18px] font-extrabold text-on-surface leading-tight mt-0.5">{singlePred.detected_item}</span>
+                <span className="text-label-sm text-on-surface-variant flex items-center gap-xs mt-1">
+                  <span className="material-symbols-outlined text-[16px]">image</span>
+                  {singlePred.filename}
+                </span>
               </div>
             </div>
-          ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col gap-lg border-b border-outline-variant pb-xl reveal">
+          {/* Left side info */}
+          <div className="flex flex-col gap-sm">
+            <span className="text-label-sm text-on-surface-variant tracking-wider uppercase font-semibold">Hasil Deteksi</span>
+            <h1 className="text-[32px] md:text-[40px] leading-[48px] tracking-tight font-extrabold text-on-surface">
+              {result.predictions.length} bahan berhasil dikenali
+            </h1>
+            <p className="text-[16px] text-on-surface-variant max-w-3xl mt-1">
+              Dari {result.predictions.length} gambar yang diunggah, berikut bahan yang terdeteksi beserta tingkat akurasinya.
+            </p>
+          </div>
+
+          {/* Prediction Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-md mt-sm">
+            {result.predictions.map((pred, i) => (
+              <div
+                key={i}
+                className="bg-surface-container-lowest border border-outline-variant/60 rounded-2xl p-md flex items-center justify-between shadow-sm hover:shadow transition-shadow"
+              >
+                <div className="flex items-center gap-md">
+                  {/* Index badge */}
+                  <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center font-bold text-on-surface">
+                    {i + 1}
+                  </div>
+                  {/* Info */}
+                  <div className="flex flex-col">
+                    <span className="text-title-md text-on-surface font-extrabold leading-snug">{pred.detected_item}</span>
+                    <span className="text-label-sm text-on-surface-variant font-medium mt-0.5">{pred.filename}</span>
+                  </div>
+                </div>
+                {/* Accuracy percentage */}
+                <div className="text-title-md text-brand-green font-bold mr-sm">
+                  {pred.confidence_percent}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recipe Recommendations Section */}
       <section className="flex flex-col gap-lg mt-md reveal">

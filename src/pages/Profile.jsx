@@ -53,7 +53,7 @@ export default function ProfilePage() {
     );
   }
 
-  const formatNum = (n) => n?.toLocaleString('id-ID');
+  const formatNum = (n) => n ? Math.round(n).toLocaleString('id-ID') : "";
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     navigate("/");

@@ -5,18 +5,18 @@ import Footer from "./components/Footer";
 import ChatbotFAB from "./components/ChatbotFAB";
 
 // Pages
-import HomePage          from "./pages/Home";
-import DeteksiPage       from "./pages/Deteksi";
-import HasilDeteksiPage  from "./pages/HasilDeteksi";
-import DetailResepPage   from "./pages/DetailResep";
-import KalkulatorPage    from "./pages/Kalkulator";
-import DatabaseGiziPage  from "./pages/DatabaseGizi";
-import TentangPage       from "./pages/Tentang";
-import ReferensiPage     from "./pages/Referensi";
-import FAQPage           from "./pages/FAQ";
-import LoginPage         from "./pages/Login";
-import RegisterPage      from "./pages/Register";
-import NotFoundPage      from "./pages/NotFound";
+import HomePage from "./pages/Home";
+import DeteksiPage from "./pages/Deteksi";
+import HasilDeteksiPage from "./pages/HasilDeteksi";
+import DetailResepPage from "./pages/DetailResep";
+import KalkulatorPage from "./pages/Kalkulator";
+import DatabaseGiziPage from "./pages/DatabaseGizi";
+import TentangPage from "./pages/Tentang";
+import ReferensiPage from "./pages/Referensi";
+import FAQPage from "./pages/FAQ";
+import LoginPage from "./pages/Login";
+import RegisterPage from "./pages/Register";
+import NotFoundPage from "./pages/NotFound";
 import ProfilePage from "./pages/Profile";
 
 function PlaceholderPage({ title }) {
@@ -43,11 +43,11 @@ function App() {
 
   useEffect(() => {
     let observer;
-    
+
     // A small timeout to let the page render first
     const timer = setTimeout(() => {
       const elements = document.querySelectorAll(".reveal, .reveal-left, .reveal-right, .reveal-scale");
-      
+
       observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -81,22 +81,22 @@ function App() {
     <div className="min-h-screen flex flex-col bg-background text-on-background">
       <Navbar darkMode={darkMode} toggleDark={toggleDark} />
 
-      <div className="pt-16">
+      <div className="pt-[72px]">
         <Routes>
-          <Route path="/"                  element={<HomePage />} />
-          <Route path="/deteksi"           element={<DeteksiPage />} />
-          <Route path="/deteksi/hasil"     element={<HasilDeteksiPage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/deteksi" element={<DeteksiPage />} />
+          <Route path="/deteksi/hasil" element={<HasilDeteksiPage />} />
           <Route path="/deteksi/resep/:id" element={<DetailResepPage />} />
-          <Route path="/kalkulator"        element={<KalkulatorPage />} />
-          <Route path="/database"          element={<DatabaseGiziPage />} />
-          <Route path="/tentang"           element={<TentangPage />} />
-          <Route path="/referensi"         element={<ReferensiPage />} />
-          <Route path="/faq"               element={<FAQPage />} />
-          <Route path="/auth/login"        element={<LoginPage />} />
-          <Route path="/auth/register"     element={<RegisterPage />} />
-          <Route path="/profile"           element={<ProfilePage />} />
-          <Route path="/not-found"         element={<NotFoundPage />} />
-          <Route path="*"                  element={<PlaceholderPage title="404 — Halaman tidak ditemukan" />} />
+          <Route path="/kalkulator" element={<KalkulatorPage />} />
+          <Route path="/database" element={<DatabaseGiziPage />} />
+          <Route path="/tentang" element={<TentangPage />} />
+          <Route path="/referensi" element={<ReferensiPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/auth/login" element={<LoginPage />} />
+          <Route path="/auth/register" element={<RegisterPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/not-found" element={<NotFoundPage />} />
+          <Route path="*" element={<PlaceholderPage title="404 — Halaman tidak ditemukan" />} />
         </Routes>
       </div>
 

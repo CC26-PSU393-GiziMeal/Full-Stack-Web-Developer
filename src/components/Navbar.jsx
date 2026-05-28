@@ -32,11 +32,11 @@ export default function Navbar({ darkMode, toggleDark }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navBackgroundClass = showNav ? (scrollY < 50 ? 'bg-transparent' : 'bg-surface/80 backdrop-blur-md') : '-translate-y-full';
+  const navBackgroundClass = showNav ? (scrollY < 50 ? 'bg-surface/30' : 'bg-surface/80 backdrop-blur-md') : '-translate-y-full';
   return (
     <>
-      <nav className={`fixed top-0 w-full z-50 transition-transform duration-300 ${navBackgroundClass}`}>
-        <div className="flex justify-between items-center w-full px-lg py-md max-w-7xl mx-auto">
+      <nav className={`fixed top-0 w-full z-50 transition-transform duration-300 ${navBackgroundClass} border-b border-outline-variant`}>
+        <div className="flex justify-between items-center w-full px-lg py-sm max-w-7xl mx-auto">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 text-brand-green font-bold text-[20px]">
             <img

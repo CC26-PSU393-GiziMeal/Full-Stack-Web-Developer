@@ -7,6 +7,7 @@ const SUPPORTED_INGREDIENTS = [
 ];
 
 export default function DeteksiPage() {
+  const navigate = useNavigate();
   const [images, setImages] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -137,7 +138,73 @@ export default function DeteksiPage() {
             {/* CTA — centered per mockup */}
             <div className="flex justify-center mt-lg">
               <button
-                onClick={() => { if (images.length > 0) navigate("/deteksi/hasil"); }}
+                onClick={() => {
+                  if (images.length === 0) return;
+                  const resultData = images.length === 1 ? {
+                    success: true,
+                    mode: "single",
+                    predictions: [
+                      {
+                        detected_item: "Cabbage",
+                        confidence_percent: "90%",
+                        filename: images[0].name
+                      }
+                    ],
+                    menu_recommendations: [
+                      {
+                        rank: 1,
+                        is_best: true,
+                        menu_name: "Cabbage rolls",
+                        matched_ingredients: 1,
+                        score_akg: 36.65,
+                        explanation: "Kubis/Cabbage gulung kukus isi daging gizi seimbang dengan porsi karbohidrat dan protein tinggi.",
+                        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBY9aQq5fxrcpIrq1DZ999kqafcc2uEBeCsLIbfEfdiAvbdy0AcKWqGWj6h0tv0TJdEr5Au1XHdssYnGWgEvXUdj96RfJzgGagcApp4AfuYmmiF-K5z9uDyQSJpRkKxZOhTerEzrOBglkVZvsX34rmd0bbZ46mAJgAZ3pi5HGcCUAInGyEjBNJbEAbfFTiJzHkhbIMu2fducvQSBt7rCISCFHUmkUCiP7JNqiSOxOrBJRl2g8G7ZEyWExdzzI9LHKiQ6_VWKsz3qRQ",
+                        kalori: 142.48,
+                      },
+                      {
+                        rank: 2,
+                        is_best: false,
+                        menu_name: "Cabbage rolls alternative",
+                        matched_ingredients: 1,
+                        score_akg: 33.08,
+                        explanation: "Sup kubis bening segar rendah kalori yang kaya serat dan vitamin.",
+                        image: "https://lh3.googleusercontent.com/aida/ADBb0uhHuqVQFzPM-SuY6-fBGMX_nPyK3lRTQljxt4uc3NnF9JVMu3Wae0pdRBpxllu2-qp95lY85qi1AHT8h5J_nsrqMsDe5yMcLDjjZErzcZsQyu6nn-5dtPr_PWI8iM4KiYIkF3h14ogP7rofDy9lgmD1AP6QcC6AvJVNuz-lU7TXNbPAhusyCWrk17xbAJpnV83YGFDlIUaQ41j92omqZbuKcOT2BMrPqL1_MmbXmQr3rvwd8aLLd1OmySE",
+                        kalori: 124.63,
+                      }
+                    ]
+                  } : {
+                    success: true,
+                    mode: "multiple",
+                    predictions: images.map((img, idx) => ({
+                      detected_item: idx % 2 === 0 ? "Cabbage" : "Chilli",
+                      confidence_percent: idx % 2 === 0 ? "90.04%" : "77.85%",
+                      filename: img.name
+                    })),
+                    menu_recommendations: [
+                      {
+                        rank: 1,
+                        is_best: true,
+                        menu_name: "Carrot apple sandwich",
+                        matched_ingredients: 1,
+                        score_akg: 41.16,
+                        explanation: "Carrot apple sandwich menempati posisi teratas dengan Skor AKG 41.16/100, tertinggi di antara menu yang cocok dengan bahan terdeteksi.",
+                        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBY9aQq5fxrcpIrq1DZ999kqafcc2uEBeCsLIbfEfdiAvbdy0AcKWqGWj6h0tv0TJdEr5Au1XHdssYnGWgEvXUdj96RfJzgGagcApp4AfuYmmiF-K5z9uDyQSJpRkKxZOhTerEzrOBglkVZvsX34rmd0bbZ46mAJgAZ3pi5HGcCUAInGyEjBNJbEAbfFTiJzHkhbIMu2fducvQSBt7rCISCFHUmkUCiP7JNqiSOxOrBJRl2g8G7ZEyWExdzzI9LHKiQ6_VWKsz3qRQ",
+                        kalori: 245.5,
+                      },
+                      {
+                        rank: 2,
+                        is_best: false,
+                        menu_name: "Vegetable and mayonnaise sandwich",
+                        matched_ingredients: 1,
+                        score_akg: 26.63,
+                        explanation: "Vegetable and mayonnaise sandwich menempati posisi kedua dengan Skor AKG 26.63/100, menyajikan perpaduan sayuran segar dengan saus mayones yang lezat.",
+                        image: "https://lh3.googleusercontent.com/aida/ADBb0uhHuqVQFzPM-SuY6-fBGMX_nPyK3lRTQljxt4uc3NnF9JVMu3Wae0pdRBpxllu2-qp95lY85qi1AHT8h5J_nsrqMsDe5yMcLDjjZErzcZsQyu6nn-5dtPr_PWI8iM4KiYIkF3h14ogP7rofDy9lgmD1AP6QcC6AvJVNuz-lU7TXNbPAhusyCWrk17xbAJpnV83YGFDlIUaQ41j92omqZbuKcOT2BMrPqL1_MmbXmQr3rvwd8aLLd1OmySE",
+                        kalori: 185.2,
+                      }
+                    ]
+                  };
+                  navigate("/deteksi/hasil", { state: { result: resultData } });
+                }}
                 disabled={images.length === 0}
                 className="bg-primary text-on-primary text-[14px] font-semibold px-xl py-md rounded-xl flex items-center gap-sm hover:bg-surface-tint transition-colors active:scale-95 shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
               >
