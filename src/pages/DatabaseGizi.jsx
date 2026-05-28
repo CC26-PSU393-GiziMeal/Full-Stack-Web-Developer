@@ -1,8 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-
-// ── Mock data — nanti diganti fetch dari Supabase/CSV ──────────────
 const MOCK_DATA = [
   { id: 1, SearchKey: "butternaan", "Food Items": "Butternaan", "Energy kcal": 300, Carbs: 50, "Protein(g)": 7, "Fat(g)": 10, "Fibre(g)": 2, "Calcium(mg)": 50, score_akg: 40.35 },
   { id: 2, SearchKey: "cupcake", "Food Items": "Cupcake", "Energy kcal": 200, Carbs: 30, "Protein(g)": 2, "Fat(g)": 8, "Fibre(g)": 0.5, "Calcium(mg)": 20, score_akg: 22.45 },
@@ -28,7 +26,6 @@ const MOCK_DATA = [
 
 const ITEMS_PER_PAGE = 10;
 
-// ── Sort helpers ───────────────────────────────────────────────────
 const SORT_OPTIONS = [
   { key: "default", label: "Default", icon: null },
   { key: "kalori_asc", label: "Kalori", icon: "arrow_upward" },
@@ -48,7 +45,6 @@ function sortData(data, sortKey) {
   }
 }
 
-// ── Pagination helper ──────────────────────────────────────────────
 function buildPages(total, current) {
   const pages = [];
   if (total <= 7) {
@@ -63,21 +59,19 @@ function buildPages(total, current) {
   return pages;
 }
 
-// ── Main Page ──────────────────────────────────────────────────────
 export default function DatabaseGiziPage() {
   const navigate = useNavigate();
   const isLogged = !!localStorage.getItem('authToken');
 
-  // If not logged, show lock screen
   if (!isLogged) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen p-8">
-        <h2 className="text-2xl font-bold text-primary mb-4">Akses Terbatas</h2>
-        <p className="mb-6 text-center text-on-surface-variant max-w-md">
-          Untuk melihat database gizi, silakan masuk terlebih dahulu.
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight text-primary mb-4">Akses Terbatas</h2>
+        <p className="mb-6 text-center text-muted-foreground leading-relaxed max-w-md">
+          Untuk melihat Data makanan, silakan masuk terlebih dahulu.
         </p>
         <button
-          className="bg-primary-container text-on-primary-container font-semibold px-md py-sm rounded-lg hover:bg-surface-tint hover:text-on-primary transition-colors"
+          className="bg-primary/10 text-primary font-semibold px-md py-sm rounded-lg hover:bg-primary/20 transition-colors"
           onClick={() => navigate('/auth/login')}
         >
           Masuk
@@ -90,7 +84,6 @@ export default function DatabaseGiziPage() {
   const [sortKey, setSortKey] = useState("default");
   const [page, setPage] = useState(1);
 
-  // Filter + sort + paginate
   const filtered = useMemo(() => {
     let d = MOCK_DATA;
     if (search.trim()) {
@@ -127,46 +120,54 @@ export default function DatabaseGiziPage() {
 
       {/* ── Header Section ── */}
       <section className="text-center max-w-2xl mx-auto mb-xl reveal">
-        <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-md">
-          Database Gizi &amp; Resep Sehat
+        <button
+          onClick={() => navigate('/deteksi')}
+          className="inline-flex items-center gap-xs text-[14px] text-primary font-medium hover:opacity-80 transition-colors mb-md group"
+        >
+          <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">
+            arrow_back
+          </span>
+          Kembali ke Deteksi
+        </button>
+
+        <h1 className="text-[28px] md:text-[36px] tracking-tight font-semibold text-primary mb-md leading-[1.05]">
+          Data Makanan & Resep Sehat
         </h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mb-lg">
+        <p className="text-[15px] leading-relaxed text-muted-foreground mb-lg">
           Pencarian informasi nutrisi dengan dataset awal dari Kaggle yang diverifikasi ulang menggunakan acuan AKG dan Pedoman Gizi Seimbang Kemenkes RI.
         </p>
-        {/* Search Bar */}
         <div className="relative w-full max-w-2xl mx-auto shadow-sm rounded-2xl group">
-          <span className="material-symbols-outlined absolute left-lg top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">search</span>
+          <span className="material-symbols-outlined absolute left-lg top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">search</span>
           <input
             type="text"
             value={search}
             onChange={handleSearch}
-            className="w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-body-lg text-body-lg rounded-2xl py-md pl-[52px] pr-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+            className="w-full bg-card border border-border text-foreground text-[16px] rounded-2xl py-md pl-[52px] pr-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
             placeholder="Cari resep atau bahan makanan..."
           />
         </div>
       </section>
 
       {/* ── Table Section ── */}
-      <section className="mb-xxl w-full overflow-x-auto border border-outline-variant rounded-2xl bg-surface-container-lowest shadow-sm reveal reveal-delay-100">
+      <section className="mb-xxl w-full overflow-x-auto border border-border rounded-2xl bg-card shadow-sm reveal reveal-delay-100">
 
-        {/* Header toolbar */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-lg border-b border-outline-variant bg-surface-container-lowest gap-md">
-          <div className="flex items-center gap-sm font-label-md text-label-md text-on-surface-variant bg-surface-container-low px-md py-sm rounded-lg">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-lg border-b border-border bg-card gap-md">
+          <div className="flex items-center gap-sm text-[14px] font-medium text-muted-foreground bg-surface-alt px-md py-sm rounded-lg">
             <span className="material-symbols-outlined text-[20px]">list</span>
-            Menampilkan <span className="font-bold text-primary">{filtered.length}</span> item
+            Menampilkan <span className="font-semibold text-primary">{filtered.length}</span> item
           </div>
           <div className="flex flex-wrap items-center gap-sm">
-            <span className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs">
+            <span className="text-[12px] font-medium tracking-wide text-muted-foreground flex items-center gap-xs">
               <span className="material-symbols-outlined text-[18px]">swap_vert</span> Urutkan:
             </span>
             {SORT_OPTIONS.map((opt) => (
               <button
                 key={opt.key}
                 onClick={() => handleSort(opt.key)}
-                className={`border border-outline-variant rounded-full px-md py-sm font-label-sm text-label-sm transition-colors flex items-center gap-xs
+                className={`border border-border rounded-full px-md py-sm text-[12px] font-medium tracking-wide transition-colors flex items-center gap-xs
                   ${sortKey === opt.key
-                    ? "text-on-surface bg-surface-variant font-medium"
-                    : "text-on-surface-variant hover:bg-surface-container"
+                    ? "text-foreground bg-surface-alt"
+                    : "text-muted-foreground hover:bg-surface"
                   }`}
               >
                 {opt.label}
@@ -176,41 +177,40 @@ export default function DatabaseGiziPage() {
           </div>
         </div>
 
-        {/* Table layout */}
-          <div className="w-full overflow-x-auto">
-            <table className="w-full table-auto text-left border-collapse">
-              <thead className="bg-surface-container-low font-label-md text-label-md text-on-surface border-b border-outline-variant">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full table-auto text-left border-collapse">
+            <thead className="bg-surface-alt text-[13px] font-semibold text-foreground border-b border-border">
               <tr>
-                <th className="px-lg py-md font-bold w-16">No</th>
-                <th className="px-lg py-md font-bold">Food Items</th>
-                <th className="px-lg py-md font-bold text-right">Energi (kcal)</th>
-                <th className="px-lg py-md font-bold text-right">Karbohidrat (g)</th>
-                <th className="px-lg py-md font-bold text-right">Protein (g)</th>
-                <th className="px-lg py-md font-bold text-right">Lemak (g)</th>
-                <th className="px-lg py-md font-bold text-right">Serat (g)</th>
-                <th className="px-lg py-md font-bold text-right">Kalsium (mg)</th>
+                <th className="px-md py-sm w-16">No</th>
+                <th className="px-md py-sm">Food Items</th>
+                <th className="px-md py-sm text-right">Energi (kcal)</th>
+                <th className="px-md py-sm text-right">Karbohidrat (g)</th>
+                <th className="px-md py-sm text-right">Protein (g)</th>
+                <th className="px-md py-sm text-right">Lemak (g)</th>
+                <th className="px-md py-sm text-right">Serat (g)</th>
+                <th className="px-md py-sm text-right">Kalsium (mg)</th>
               </tr>
             </thead>
-            <tbody className="font-body-md text-body-md text-on-surface divide-y divide-outline-variant/50">
+            <tbody className="text-[14px] text-foreground divide-y divide-border/50">
               {pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-lg py-md text-center text-on-surface-variant">
+                  <td colSpan={8} className="px-md py-sm text-center text-muted-foreground">
                     Tidak ada data yang sesuai.
                   </td>
                 </tr>
               ) : (
                 pageData.map((row, i) => (
-                  <tr key={row.id} className="hover:bg-surface-container-low/50 transition-colors">
-                    <td className="px-lg py-md text-on-surface-variant">
+                  <tr key={row.id} className="hover:bg-surface-alt/50 transition-colors">
+                    <td className="px-md py-sm text-muted-foreground tabular-nums">
                       {(safePage - 1) * ITEMS_PER_PAGE + i + 1}
                     </td>
-                    <td className="px-lg py-md font-bold text-on-surface">{row["Food Items"]}</td>
-                    <td className="px-lg py-md font-bold text-primary text-right">{numFmt(row["Energy kcal"])}</td>
-                    <td className="px-lg py-md text-right font-numeric-data">{numFmt(row.Carbs)}</td>
-                    <td className="px-lg py-md text-right font-numeric-data">{numFmt(row["Protein(g)"])}</td>
-                    <td className="px-lg py-md text-right font-numeric-data">{numFmt(row["Fat(g)"])}</td>
-                    <td className="px-lg py-md text-right font-numeric-data">{numFmt(row["Fibre(g)"])}</td>
-                    <td className="px-lg py-md text-right font-numeric-data">{numFmt(row["Calcium(mg)"])}</td>
+                    <td className="px-md py-sm font-semibold text-foreground">{row["Food Items"]}</td>
+                    <td className="px-md py-sm font-semibold text-primary text-right tabular-nums">{numFmt(row["Energy kcal"])}</td>
+                    <td className="px-md py-sm text-right tabular-nums">{numFmt(row.Carbs)}</td>
+                    <td className="px-md py-sm text-right tabular-nums">{numFmt(row["Protein(g)"])}</td>
+                    <td className="px-md py-sm text-right tabular-nums">{numFmt(row["Fat(g)"])}</td>
+                    <td className="px-md py-sm text-right tabular-nums">{numFmt(row["Fibre(g)"])}</td>
+                    <td className="px-md py-sm text-right tabular-nums">{numFmt(row["Calcium(mg)"])}</td>
                   </tr>
                 ))
               )}
@@ -218,32 +218,31 @@ export default function DatabaseGiziPage() {
           </table>
         </div>
 
-        {/* Footer pagination */}
-        <div className="flex flex-col sm:flex-row justify-between items-center p-lg bg-surface-container-lowest border-t border-outline-variant gap-md">
-          <div className="font-label-md text-label-md text-on-surface-variant">
-            Halaman <span className="font-bold text-on-surface">{safePage}</span> dari {totalPages}
+        <div className="flex flex-col sm:flex-row justify-between items-center p-lg bg-card border-t border-border gap-md">
+          <div className="text-[14px] font-medium text-muted-foreground">
+            Halaman <span className="font-semibold text-foreground">{safePage}</span> dari {totalPages}
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => goPage(safePage - 1)}
               disabled={safePage === 1}
-              className="flex items-center justify-center w-10 h-10 border border-outline-variant rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-50 material-symbols-outlined"
+              className="flex items-center justify-center w-10 h-10 border border-border rounded-xl text-muted-foreground hover:bg-surface transition-colors disabled:opacity-50 material-symbols-outlined"
             >
               chevron_left
             </button>
             {pageButtons.map((p, idx) =>
               p === "..." ? (
-                <span key={`ellipsis-${idx}`} className="flex items-center justify-center w-10 h-10 text-on-surface-variant">
+                <span key={`ellipsis-${idx}`} className="flex items-center justify-center w-10 h-10 text-muted-foreground tabular-nums">
                   ...
                 </span>
               ) : (
                 <button
                   key={p}
                   onClick={() => goPage(p)}
-                  className={`flex items-center justify-center w-10 h-10 rounded-xl font-label-md shadow-sm transition-colors
+                  className={`flex items-center justify-center w-10 h-10 rounded-xl text-[14px] font-medium shadow-sm transition-colors tabular-nums
                     ${p === safePage
-                      ? "bg-primary text-on-primary"
-                      : "border border-outline-variant text-on-surface-variant hover:bg-surface-container"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border text-muted-foreground hover:bg-surface"
                     }`}
                 >
                   {p}
@@ -253,7 +252,7 @@ export default function DatabaseGiziPage() {
             <button
               onClick={() => goPage(safePage + 1)}
               disabled={safePage === totalPages}
-              className="flex items-center justify-center w-10 h-10 border border-outline-variant rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-50 material-symbols-outlined"
+              className="flex items-center justify-center w-10 h-10 border border-border rounded-xl text-muted-foreground hover:bg-surface transition-colors disabled:opacity-50 material-symbols-outlined"
             >
               chevron_right
             </button>
@@ -261,15 +260,13 @@ export default function DatabaseGiziPage() {
         </div>
       </section>
 
-      {/* Info Warning */}
-      <div className="flex items-center gap-sm p-md bg-surface-container-low rounded-xl font-label-sm text-label-sm text-on-surface-variant mt-lg border border-outline-variant/50 reveal reveal-delay-300">
+      <div className="flex items-center gap-sm p-md bg-surface-alt rounded-xl text-[12px] font-medium tracking-wide text-muted-foreground mt-lg border border-border/50 reveal reveal-delay-300">
         <span className="material-symbols-outlined text-[20px] text-primary">info</span>
         Informasi bersifat edukatif dan bukan pengganti konsultasi tenaga kesehatan. Lihat{" "}
-        <Link className="underline font-medium hover:text-primary transition-colors ml-1" to="/referensi">
+        <Link className="underline font-semibold hover:text-primary transition-colors ml-1" to="/referensi">
           sumber referensi
         </Link>.
       </div>
-
     </main>
   );
 }

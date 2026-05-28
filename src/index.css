@@ -40,7 +40,7 @@
   --color-on-primary-fixed: #002114;
   --color-surface: #f8f9fa;
   --color-surface-bright: #f8f9fa;
-  --color-primary: #012d1d;
+  --color-primary: #00935D;
   --color-on-tertiary-container: #53b889;
   --color-on-primary: #ffffff;
   --color-surface-container-lowest: #ffffff;
@@ -86,7 +86,7 @@
   --color-on-primary-fixed: #002113;
   --color-surface: #131313;
   --color-surface-bright: #393939;
-  --color-primary: #fbfff9;
+  --color-primary: #00ac6c;
   --color-on-tertiary-container: #446c58;
   --color-on-primary: #003824;
   --color-surface-container-lowest: #0e0e0e;
@@ -95,7 +95,7 @@
 }
 
 * {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 body {

@@ -63,6 +63,13 @@ export default function RegisterPage() {
     setErrors({});
     setIsLoading(true);
     // TODO: Integrate Supabase Auth
+    localStorage.setItem('registeredUser', JSON.stringify({
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      username: form.email.split('@')[0],
+      joined: new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+    }));
     setTimeout(() => {
       setIsLoading(false);
       navigate("/auth/login");
@@ -77,7 +84,7 @@ export default function RegisterPage() {
 
       {/* ── Left Panel ─────────────────────────────────────────────── */}
       <div
-        className="hidden lg:flex flex-col justify-between lg:w-1/2 p-xxl relative overflow-hidden"
+        className="hidden lg:flex flex-col justify-between lg:w-1/2 p-xxl relative overflow-hidden h-screen sticky top-0"
         style={{ background: "linear-gradient(160deg, #1b4332 0%, #2d6a4f 60%, #012d1d 100%)" }}
       >
         {/* Background image */}

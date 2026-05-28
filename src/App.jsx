@@ -34,12 +34,21 @@ function PlaceholderPage({ title }) {
 }
 
 function App() {
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    return saved === "dark";
+  });
   const location = useLocation();
 
   useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     let observer;
@@ -74,14 +83,15 @@ function App() {
 
   const toggleDark = () => {
     setDarkMode((prev) => !prev);
-    document.documentElement.classList.toggle("dark");
   };
+
+  const isAuthPage = location.pathname.startsWith("/auth");
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-on-background">
-      <Navbar darkMode={darkMode} toggleDark={toggleDark} />
+      {!isAuthPage && <Navbar darkMode={darkMode} toggleDark={toggleDark} />}
 
-      <div className="pt-[72px]">
+      <div className={isAuthPage ? "" : "pt-[72px]"}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/deteksi" element={<DeteksiPage />} />
@@ -133,7 +143,7 @@ function App() {
       )}
 
       <ChatbotFAB />
-      <Footer />
+      {!isAuthPage && <Footer />}
     </div>
   );
 }

@@ -25,14 +25,12 @@ export default function LoginPage() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
-      setIsLoading(true);
-      // Simulate authentication and store token
-      setTimeout(() => {
-        setIsLoading(false);
-        // Store a dummy auth token for session persistence
-        localStorage.setItem('authToken', 'demo-token');
-        navigate('/');
-      }, 1200);
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      localStorage.setItem("authToken", "demo-token");
+      navigate("/");
+    }, 1200);
   };
 
   const inputBase =
@@ -73,7 +71,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Footer */}
+        {/* Bottom label */}
         <div className="relative z-10">
           <div className="flex items-center gap-md mb-xs opacity-50">
             <div className="h-px w-8 bg-white" />
@@ -83,9 +81,8 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right Panel: Form ──────────────────────────────────────── */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-surface-container-lowest px-container-margin md:px-xl lg:px-xxl py-xxl">
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-surface-container-lowest px-container-margin md:px-xl lg:px-xxl py-xxl overflow-y-auto">
 
-        {/* Form card */}
         <div className="w-full max-w-[420px] flex flex-col mt-xl lg:mt-0">
           {/* Mobile logo */}
           <div className="flex lg:hidden items-center gap-sm text-primary mb-xl">
@@ -105,7 +102,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="mb-xl">
             <span className="block text-[12px] font-semibold tracking-widest text-secondary uppercase mb-sm">MASUK AKUN</span>
-            <h2 className="text-[32px] md:text-[32px] font-bold text-on-surface mb-sm leading-tight">
+            <h2 className="text-[32px] font-bold text-on-surface mb-sm leading-tight">
               Selamat datang kembali.
             </h2>
             <p className="text-[16px] text-on-surface-variant leading-6">
@@ -205,10 +202,6 @@ export default function LoginPage() {
                 Daftar
               </Link>
             </p>
-          </div>
-
-          <div className="mt-xxl pt-xxl text-center">
-            <p className="text-[12px] text-outline">© 2026 GiziMeal. All rights reserved.</p>
           </div>
         </div>
       </div>
