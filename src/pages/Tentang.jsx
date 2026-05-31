@@ -1,10 +1,10 @@
 const TEAM = [
-  { initials: "AK", name: "Azharangga Kusuma",      role: "AI Engineer & PM",  cohort: "CACC270D4Y0721", path: "AI Engineer",         bg: "bg-primary/20", text: "text-primary" },
-  { initials: "PN", name: "Putri Nabilla",          role: "AI Engineer",       cohort: "CACC270D4X1171", path: "AI Engineer",         bg: "bg-secondary",        text: "text-secondary-foreground" },
-  { initials: "FR", name: "Farina Setya Rahesti",   role: "Data Scientist",    cohort: "CDCC768D4X3089", path: "Data Scientist",      bg: "bg-primary/40",       text: "text-primary-foreground" },
-  { initials: "MB", name: "Mahaputri Buana Devi",   role: "Data Scientist",    cohort: "CDCC768D4X0068", path: "Data Scientist",      bg: "bg-primary",          text: "text-primary-foreground" },
-  { initials: "MD", name: "M. Dava Arya Nada Putra",role: "Frontend Developer", cohort: "CFCC258D4Y1663", path: "Full-Stack Web Dev", bg: "bg-secondary/40", text: "text-secondary-foreground" },
-  { initials: "MI", name: "Muhammad Ihsanul Dzikri",role: "Backend Developer",  cohort: "CFCC308D4Y1181", path: "Full-Stack Web Dev", bg: "bg-secondary/20",   text: "text-secondary" },
+  { initials: "AK", name: "Azharangga Kusuma",      role: "AI Engineer & PM",  cohort: "CACC370D6Y0721", path: "AI Engineer",         bg: "bg-primary/20", text: "text-secondary-foreground" },
+  { initials: "PN", name: "Putri Nabilla",          role: "AI Engineer",       cohort: "CACC370D6X1171", path: "AI Engineer",         bg: "bg-secondary",        text: "text-white" },
+  { initials: "FR", name: "Farina Setya Rahesti",   role: "Data Scientist",    cohort: "CDCC796D6X0089", path: "Data Scientist",      bg: "bg-primary/40",       text: "text-secondary-foreground" },
+  { initials: "MB", name: "Mahaputri Buana Devwitasari",   role: "Data Scientist",    cohort: "CDCC796D6X0088", path: "Data Scientist",      bg: "bg-secondary",          text: "text-white" },
+  { initials: "MD", name: "M. Dava Arya Nada Putra",role: "Frontend Developer", cohort: "CFCC258D6Y1955", path: "Full-Stack Web Dev", bg: "bg-primary/40", text: "text-secondary-foreground" },
+  { initials: "MI", name: "Muhammad Ihsanul Dzaky",role: "Backend Developer",  cohort: "CFCC308D6Y1451", path: "Full-Stack Web Dev", bg: "bg-secondary",   text: "text-white" },
 ];
 
 const STEPS = [

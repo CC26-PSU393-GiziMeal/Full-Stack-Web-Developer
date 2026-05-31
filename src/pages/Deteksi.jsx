@@ -1,19 +1,49 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-
-const SUPPORTED_INGREDIENTS = [
-  "Wortel", "Tomat", "Bawang", "Bayam", "Ikan", "Ayam",
-  "Daging Sapi", "Telur", "Tahu", "Tempe",
-];
+import Swal from "sweetalert2";
 
 export default function DeteksiPage() {
   const navigate = useNavigate();
   const [images, setImages] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef(null);
   const isLogged = !!localStorage.getItem('authToken');
 
-  // If not logged, show lock screen
+  const [supportedIngredients, setSupportedIngredients] = useState([]);
+  const [isLoadingClasses, setIsLoadingClasses] = useState(true);
+
+  useEffect(() => {
+    if (!isLogged) return;
+
+    const fetchClasses = async () => {
+      try {
+        setIsLoadingClasses(true);
+        const response = await fetch("https://cc26-psu393-gizimeal-api.hf.space/classes");
+        
+        if (!response.ok) {
+          throw new Error("Gagal memuat daftar bahan.");
+        }
+        
+        const data = await response.json();
+        
+        const classesArray = Array.isArray(data) ? data : (data.classes || data.data || []);
+        
+        setSupportedIngredients(classesArray);
+      } catch (err) {
+        console.error("Gagal mengambil rute classes:", err);
+        setSupportedIngredients([
+          "Wortel", "Tomat", "Bawang", "Bayam", "Ikan", "Ayam",
+          "Daging Sapi", "Telur", "Tahu", "Tempe"
+        ]);
+      } finally {
+        setIsLoadingClasses(false);
+      }
+    };
+
+    fetchClasses();
+  }, [isLogged]);
+
   if (!isLogged) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen p-8">
@@ -30,7 +60,8 @@ export default function DeteksiPage() {
       </main>
     );
   }
-  const MAX_IMAGES = 15;
+
+  const MAX_IMAGES = 1;
 
   const addFiles = (files) => {
     const valid = Array.from(files)
@@ -40,6 +71,7 @@ export default function DeteksiPage() {
       id: crypto.randomUUID(),
       url: URL.createObjectURL(file),
       name: file.name,
+      rawFile: file
     }));
     if (previews.length > 0) {
       setImages((prev) => [...prev, ...previews]);
@@ -51,6 +83,55 @@ export default function DeteksiPage() {
   const handleFileInput = (e) => {
     addFiles(e.target.files);
     e.target.value = "";
+  };
+
+  const handleMulaiDeteksi = async () => {
+    if (images.length === 0) return;
+
+    setIsAnalyzing(true);
+    Swal.fire({
+      title: "Menganalisis Foto...",
+      text: "GiziMeal AI sedang mengidentifikasi bahan makanan dan menyusun menu ideal.",
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("file", images[0].rawFile); 
+
+      // ── KUNCI DI SISI FRONTEND: Ambil ID user dari localStorage dan selipkan ke body ──
+      const userRaw = localStorage.getItem("user");
+      if (userRaw) {
+        const userId = JSON.parse(userRaw).id;
+        formData.append("userId", userId); // Menyisipkan userId ke form-data request
+      }
+
+      const response = await fetch("http://localhost:3000/api/predict", {
+        method: "POST",
+        body: formData, // Browser otomatis menyusun boundary multipart/form-data
+      });
+
+      const jsonResult = await response.json();
+
+      if (!response.ok || !jsonResult.success) {
+        throw new Error(jsonResult.message || "Gagal melakukan deteksi citra.");
+      }
+
+      Swal.close();
+      navigate("/deteksi/hasil", { state: { result: jsonResult.data } });
+
+    } catch (err) {
+      console.error("Deteksi Alur Error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Deteksi Gagal",
+        text: err.message || "Terjadi kesalahan saat memproses gambar.",
+        confirmButtonColor: "#f44336",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -86,24 +167,31 @@ export default function DeteksiPage() {
 
         {/* Drop Zone */}
         <div
-          onClick={() => fileInputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onClick={() => !isAnalyzing && fileInputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); if(!isAnalyzing) setIsDragging(true); }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           className={`bg-card border-2 border-dashed rounded-2xl p-xl flex flex-col items-center justify-center text-center gap-md min-h-[360px] cursor-pointer transition-all group
-            ${isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary"}`}
+            ${isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary"}
+            ${isAnalyzing ? "opacity-50 pointer-events-none cursor-not-allowed" : ""}`}
         >
           <div className={`p-lg rounded-full transition-colors shadow-sm ${isDragging ? "bg-primary/20 text-primary" : "bg-surface group-hover:bg-primary/10 group-hover:text-primary"}`}>
-            <span className="material-symbols-outlined text-4xl text-muted-foreground group-hover:text-primary">cloud_upload</span>
+            <span className="material-symbols-outlined text-4xl text-muted-foreground group-hover:text-primary">
+              {isAnalyzing ? "sync" : "cloud_upload"}
+            </span>
           </div>
           <div>
-            <p className="text-[20px] font-semibold text-foreground tracking-tight mb-xs">Drag & Drop foto di sini</p>
-            <p className="text-[15px] text-muted-foreground">atau klik untuk menelusuri dari perangkat</p>
+            <p className="text-[20px] font-semibold text-foreground tracking-tight mb-xs">
+              {isAnalyzing ? "Sedang memproses..." : "Drag & Drop foto di sini"}
+            </p>
+            <p className="text-[15px] text-muted-foreground">
+              {isAnalyzing ? "Mohon tunggu sejenak" : "atau klik untuk menelusuri dari perangkat"}
+            </p>
           </div>
           <p className="text-[12px] font-medium tracking-wide text-muted-foreground/60 mt-sm">
-            Mendukung JPG, PNG, WEBP. Maks 5MB per file.
+            Mendukung JPG, PNG, WEBP. Maks 1MB per file.
           </p>
-          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handleFileInput} onClick={(e) => e.stopPropagation()} />
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileInput} onClick={(e) => e.stopPropagation()} />
         </div>
 
         {/* Preview Grid */}
@@ -117,99 +205,27 @@ export default function DeteksiPage() {
                 <div key={img.id} className="aspect-square rounded-xl bg-surface-alt relative overflow-hidden group border border-border">
                   <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
                   <button
+                    disabled={isAnalyzing}
                     onClick={(e) => { e.stopPropagation(); removeImage(img.id); }}
-                    className="absolute top-xs right-xs bg-destructive text-destructive-foreground p-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-xs right-xs bg-destructive text-destructive-foreground p-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:pointer-events-none"
                   >
                     <span className="material-symbols-outlined text-sm leading-none">close</span>
                   </button>
                 </div>
               ))}
-              {images.length < MAX_IMAGES && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                  className="aspect-square border border-dashed border-border rounded-xl flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary hover:bg-surface transition-colors bg-card"
-                >
-                  <span className="material-symbols-outlined mb-xs">add_photo_alternate</span>
-                  <span className="text-[12px] font-medium">Tambah Foto</span>
-                </button>
-              )}
             </div>
 
-            {/* CTA — centered per mockup */}
+            {/* CTA Button */}
             <div className="flex justify-center mt-lg">
               <button
-                onClick={() => {
-                  if (images.length === 0) return;
-                  const resultData = images.length === 1 ? {
-                    success: true,
-                    mode: "single",
-                    predictions: [
-                      {
-                        detected_item: "Cabbage",
-                        confidence_percent: "90%",
-                        filename: images[0].name
-                      }
-                    ],
-                    menu_recommendations: [
-                      {
-                        rank: 1,
-                        is_best: true,
-                        menu_name: "Cabbage rolls",
-                        matched_ingredients: 1,
-                        score_akg: 36.65,
-                        explanation: "Kubis/Cabbage gulung kukus isi daging gizi seimbang dengan porsi karbohidrat dan protein tinggi.",
-                        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBY9aQq5fxrcpIrq1DZ999kqafcc2uEBeCsLIbfEfdiAvbdy0AcKWqGWj6h0tv0TJdEr5Au1XHdssYnGWgEvXUdj96RfJzgGagcApp4AfuYmmiF-K5z9uDyQSJpRkKxZOhTerEzrOBglkVZvsX34rmd0bbZ46mAJgAZ3pi5HGcCUAInGyEjBNJbEAbfFTiJzHkhbIMu2fducvQSBt7rCISCFHUmkUCiP7JNqiSOxOrBJRl2g8G7ZEyWExdzzI9LHKiQ6_VWKsz3qRQ",
-                        kalori: 142.48,
-                      },
-                      {
-                        rank: 2,
-                        is_best: false,
-                        menu_name: "Cabbage rolls alternative",
-                        matched_ingredients: 1,
-                        score_akg: 33.08,
-                        explanation: "Sup kubis bening segar rendah kalori yang kaya serat dan vitamin.",
-                        image: "https://lh3.googleusercontent.com/aida/ADBb0uhHuqVQFzPM-SuY6-fBGMX_nPyK3lRTQljxt4uc3NnF9JVMu3Wae0pdRBpxllu2-qp95lY85qi1AHT8h5J_nsrqMsDe5yMcLDjjZErzcZsQyu6nn-5dtPr_PWI8iM4KiYIkF3h14ogP7rofDy9lgmD1AP6QcC6AvJVNuz-lU7TXNbPAhusyCWrk17xbAJpnV83YGFDlIUaQ41j92omqZbuKcOT2BMrPqL1_MmbXmQr3rvwd8aLLd1OmySE",
-                        kalori: 124.63,
-                      }
-                    ]
-                  } : {
-                    success: true,
-                    mode: "multiple",
-                    predictions: images.map((img, idx) => ({
-                      detected_item: idx % 2 === 0 ? "Cabbage" : "Chilli",
-                      confidence_percent: idx % 2 === 0 ? "90.04%" : "77.85%",
-                      filename: img.name
-                    })),
-                    menu_recommendations: [
-                      {
-                        rank: 1,
-                        is_best: true,
-                        menu_name: "Carrot apple sandwich",
-                        matched_ingredients: 1,
-                        score_akg: 41.16,
-                        explanation: "Carrot apple sandwich menempati posisi teratas dengan Skor AKG 41.16/100, tertinggi di antara menu yang cocok dengan bahan terdeteksi.",
-                        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBY9aQq5fxrcpIrq1DZ999kqafcc2uEBeCsLIbfEfdiAvbdy0AcKWqGWj6h0tv0TJdEr5Au1XHdssYnGWgEvXUdj96RfJzgGagcApp4AfuYmmiF-K5z9uDyQSJpRkKxZOhTerEzrOBglkVZvsX34rmd0bbZ46mAJgAZ3pi5HGcCUAInGyEjBNJbEAbfFTiJzHkhbIMu2fducvQSBt7rCISCFHUmkUCiP7JNqiSOxOrBJRl2g8G7ZEyWExdzzI9LHKiQ6_VWKsz3qRQ",
-                        kalori: 245.5,
-                      },
-                      {
-                        rank: 2,
-                        is_best: false,
-                        menu_name: "Vegetable and mayonnaise sandwich",
-                        matched_ingredients: 1,
-                        score_akg: 26.63,
-                        explanation: "Vegetable and mayonnaise sandwich menempati posisi kedua dengan Skor AKG 26.63/100, menyajikan perpaduan sayuran segar dengan saus mayones yang lezat.",
-                        image: "https://lh3.googleusercontent.com/aida/ADBb0uhHuqVQFzPM-SuY6-fBGMX_nPyK3lRTQljxt4uc3NnF9JVMu3Wae0pdRBpxllu2-qp95lY85qi1AHT8h5J_nsrqMsDe5yMcLDjjZErzcZsQyu6nn-5dtPr_PWI8iM4KiYIkF3h14ogP7rofDy9lgmD1AP6QcC6AvJVNuz-lU7TXNbPAhusyCWrk17xbAJpnV83YGFDlIUaQ41j92omqZbuKcOT2BMrPqL1_MmbXmQr3rvwd8aLLd1OmySE",
-                        kalori: 185.2,
-                      }
-                    ]
-                  };
-                  navigate("/deteksi/hasil", { state: { result: resultData } });
-                }}
-                disabled={images.length === 0}
-                className="bg-primary text-primary-foreground text-[14px] font-semibold px-xl py-md rounded-xl flex items-center gap-sm hover:opacity-90 transition-colors active:scale-95 shadow-md hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
+                onClick={handleMulaiDeteksi}
+                disabled={images.length === 0 || isAnalyzing}
+                className="bg-primary text-primary-foreground text-[14px] font-semibold px-xl py-md rounded-xl flex items-center gap-sm hover:opacity-90 transition-all active:scale-95 shadow-sm hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <span className="material-symbols-outlined">troubleshoot</span>
-                Mulai Deteksi
+                <span className="material-symbols-outlined">
+                  {isAnalyzing ? "progress_activity" : "troubleshoot"}
+                </span>
+                {isAnalyzing ? "Menganalisis Citra..." : "Mulai Deteksi"}
               </button>
             </div>
           </div>
@@ -227,7 +243,7 @@ export default function DeteksiPage() {
           <ul className="flex flex-col gap-md text-[15px]">
             {[
               ["Cahaya cukup", "Pastikan foto terang dan tidak buram."],
-              ["1 bahan per foto", "Hindari menumpuk bahan berbeda."],
+              ["Fokus pada objek", "Ambil gambar dari sudut atas tegak lurus."],
               ["Background polos", "Gunakan latar belakang yang kontras."],
             ].map(([bold, rest]) => (
               <li key={bold} className="flex items-start gap-sm">
@@ -238,22 +254,28 @@ export default function DeteksiPage() {
           </ul>
         </div>
 
-        {/* Supported Ingredients */}
+        {/* ── SEKSI TERINTEGRASI: BAHAN DIDUKUNG DARI API ── */}
         <div className="bg-card rounded-2xl p-lg border border-border shadow-sm">
           <div className="flex items-center gap-sm mb-lg pb-sm border-b border-border">
             <span className="material-symbols-outlined text-foreground">format_list_bulleted</span>
             <h3 className="text-[18px] font-semibold tracking-tight text-foreground">BAHAN DIDUKUNG</h3>
           </div>
-          <div className="flex flex-wrap gap-sm">
-            {SUPPORTED_INGREDIENTS.map((item) => (
-              <span key={item} className="bg-surface px-md py-xs rounded-full text-[12px] font-medium tracking-wide text-muted-foreground border border-border">
-                {item}
-              </span>
-            ))}
-            <span className="bg-primary/10 px-md py-xs rounded-full text-[12px] font-semibold text-primary border border-primary/20">
-              + 50 lainnya
-            </span>
-          </div>
+          
+          {isLoadingClasses ? (
+            <div className="flex items-center justify-center py-md text-[13px] text-muted-foreground gap-xs">
+              <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+              Memanggil bahan...
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-sm">
+              {supportedIngredients.map((item, idx) => (
+                <span key={idx} className="bg-surface px-md py-xs rounded-full text-[12px] font-medium tracking-wide text-muted-foreground border border-border capitalize">
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div className="mt-lg pt-md border-t border-border text-center">
             <Link to="/database" className="text-[14px] font-semibold text-primary hover:opacity-80 underline hover:no-underline transition-all">
               Lihat Data Makanan

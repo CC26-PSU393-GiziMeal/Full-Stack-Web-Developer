@@ -1,24 +1,21 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const ACTIVITY_LEVELS = [
-  { value: "1.2",   label: "Sangat Ringan (Sedenter)", freq: "Sangat jarang / tidak pernah olahraga", met: "Intensitas: MET < 1.5" },
+  { value: "1.2", label: "Sangat Ringan (Sedenter)", freq: "Sangat jarang / tidak pernah olahraga", met: "Intensitas: MET < 1.5" },
   { value: "1.375", label: "Ringan", freq: "Olahraga ringan 1–3 hari/minggu", met: "Intensitas: MET 1.5 – 3.0" },
-  { value: "1.55",  label: "Sedang (Moderat)", freq: "Olahraga sedang 3–5 hari/minggu", met: "Intensitas: MET 3.0 – 6.0" },
+  { value: "1.55", label: "Sedang (Moderat)", freq: "Olahraga sedang 3–5 hari/minggu", met: "Intensitas: MET 3.0 – 6.0" },
   { value: "1.725", label: "Berat (Aktif)", freq: "Olahraga berat 6–7 hari/minggu", met: "Intensitas: MET 6.0 – 8.0" },
-  { value: "1.9",   label: "Sangat Berat", freq: "Pekerjaan fisik berat / atlet (setiap hari)", met: "Intensitas: MET > 8.0" },
-];
-const GOALS = [
-  { value: "turun",  label: "Turunkan BB",    delta: -500, desc: "-500 kkal / hari" },
-  { value: "tahan",  label: "Pertahankan BB", delta: 0,    desc: "0 kkal / hari" },
-  { value: "naik",   label: "Naikkan BB",     delta: 500,  desc: "+500 kkal / hari" },
+  { value: "1.9", label: "Sangat Berat", freq: "Pekerjaan fisik berat / atlet (setiap hari)", met: "Intensitas: MET > 8.0" },
 ];
 
-function hitungBMR(gender, berat, tinggi, usia) {
-  if (!gender || !berat || !tinggi || !usia) return null;
-  const base = 10 * berat + 6.25 * tinggi - 5 * usia;
-  return gender === "pria" ? base + 5 : base - 161;
-}
+const GOALS = [
+  { value: "turun", label: "Turunkan BB", delta: -500, desc: "-500 kkal / hari" },
+  { value: "tahan", label: "Pertahankan BB", delta: 0, desc: "0 kkal / hari" },
+  { value: "naik", label: "Naikkan BB", delta: 500, desc: "+500 kkal / hari" },
+];
 
 function formatNum(n) {
   if (n == null) return "–";
@@ -67,6 +64,9 @@ function ResultCard({ label, value, unit, variant = "default", sub }) {
 export default function KalkulatorPage() {
   const isLogged = !!localStorage.getItem('authToken');
   const navigate = useNavigate();
+  const [form, setForm] = useState({ gender: "", usia: "", berat: "", tinggi: "", aktivitas: "", tujuan: "tahan" });
+  const [hasil, setHasil] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('kalkulatorProfile');
@@ -98,34 +98,123 @@ export default function KalkulatorPage() {
     );
   }
 
-  const [form, setForm] = useState({ gender: "", usia: "", berat: "", tinggi: "", aktivitas: "", tujuan: "tahan" });
-  const [hasil, setHasil] = useState(null);
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  function hitung() {
-    const bmr = hitungBMR(form.gender, parseFloat(form.berat), parseFloat(form.tinggi), parseFloat(form.usia));
-    if (!bmr) return;
-    const pal = parseFloat(form.aktivitas) || 1.55;
-    const tdee = bmr * pal;
-    const goal = GOALS.find((g) => g.value === form.tujuan) || GOALS[1];
-    const target = tdee + goal.delta;
-    const karbo   = Math.round((target * 0.5) / 4);
-    const protein = Math.round((target * 0.2) / 4);
-    const lemak   = Math.round((target * 0.3) / 9);
-    setHasil({ bmr, tdee, target, karbo, protein, lemak, goalLabel: goal.label });
+  async function hitung() {
+    if (!form.gender || !form.berat || !form.tinggi || !form.usia || !form.aktivitas) {
+      Swal.fire({
+        icon: "warning",
+        title: "Profil Belum Lengkap",
+        text: "Harap lengkapi semua profil biometrik dan gaya hidup terlebih dahulu.",
+        confirmButtonColor: "var(--color-primary, #4caf50)",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const response = await fetch("http://localhost:3000/api/calculate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          gender: form.gender,
+          usia: form.usia,
+          berat: form.berat,
+          tinggi: form.tinggi,
+          aktivitas: form.aktivitas,
+          tujuan: form.tujuan
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Gagal melakukan perhitungan kalkulator.");
+      }
+
+      setHasil(data);
+
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Perhitungan Gagal",
+        text: err.message,
+        confirmButtonColor: "#f44336",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
-  function saveProfile() {
-    const data = { form, hasil };
-    localStorage.setItem('kalkulatorProfile', JSON.stringify(data));
-    alert('Profil berhasil disimpan');
+  async function saveProfile() {
+    if (!hasil) {
+      Swal.fire({
+        icon: "info",
+        title: "Lakukan Perhitungan",
+        text: "Silakan tekan tombol 'Hitung Sekarang' terlebih dahulu sebelum menyimpan.",
+        confirmButtonColor: "var(--color-primary, #4caf50)",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const userRaw = localStorage.getItem("user");
+      if (!userRaw) throw new Error("Sesi pengguna tidak ditemukan. Silakan login kembali.");
+      const userId = JSON.parse(userRaw).id;
+
+      const response = await fetch("http://localhost:3000/api/calculate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          gender: form.gender,
+          usia: form.usia,
+          berat: form.berat,
+          tinggi: form.tinggi,
+          aktivitas: form.aktivitas,
+          tujuan: form.tujuan
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Gagal menyimpan data ke database.");
+      }
+
+      localStorage.setItem('kalkulatorProfile', JSON.stringify({ form, hasil }));
+      
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil Disimpan",
+        text: "Hasil perhitungan berhasil disimpan",
+        confirmButtonColor: "var(--color-secondary, #2196f3)",
+      });
+
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Menyimpan",
+        text: err.message,
+        confirmButtonColor: "#f44336",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   const inputClass = "w-full bg-surface-alt border border-border rounded-lg py-md px-md focus:border-secondary focus:ring-1 focus:ring-secondary transition-all text-[15px] text-foreground outline-none tabular-nums";
 
   return (
     <main className="flex-grow w-full max-w-7xl mx-auto px-container-margin md:px-lg py-xl lg:py-xxl">
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="mb-xl text-center md:text-left reveal">
         <h1 className="text-[28px] md:text-[36px] tracking-tight font-semibold text-primary mb-sm leading-[1.05]">
           Kalkulator Energi Harian
@@ -137,7 +226,7 @@ export default function KalkulatorPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg lg:gap-xl">
-        {/* ════════════ INPUT PANEL ════════════ */}
+        {/* INPUT PANEL */}
         <section className="lg:col-span-7 bg-card rounded-xl p-lg md:p-xl shadow-sm border border-border reveal-left">
           <div className="space-y-xl">
             {/* 1. Profil Biometrik */}
@@ -157,14 +246,14 @@ export default function KalkulatorPage() {
                       }`}
                   >
                     <input type="radio" name="gender" value={g} checked={form.gender === g} onChange={set("gender")} className="w-5 h-5 accent-primary" />
-                    <span className="text-[15px] font-medium text-foreground capitalize">{g}</span>
+                    <span className="text-[15px] font-medium text-foreground capitalize">{g === 'pria' ? 'Laki-laki' : 'Perempuan'}</span>
                   </label>
                 ))}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-md mt-md">
                 {[
-                  { key: "usia",   label: "Usia",         placeholder: "Misal: 25",  unit: "thn" },
-                  { key: "berat",  label: "Berat Badan",  placeholder: "Misal: 65",  unit: "kg" },
+                  { key: "usia", label: "Usia", placeholder: "Misal: 25", unit: "thn" },
+                  { key: "berat", label: "Berat Badan", placeholder: "Misal: 65", unit: "kg" },
                   { key: "tinggi", label: "Tinggi Badan", placeholder: "Misal: 170", unit: "cm" },
                 ].map(({ key, label, placeholder, unit }) => (
                   <div key={key} className="space-y-xs">
@@ -239,19 +328,32 @@ export default function KalkulatorPage() {
             </fieldset>
 
             <div className="flex flex-col md:flex-row gap-md pt-md">
-              <button onClick={hitung} className="flex-1 bg-primary text-primary-foreground text-[14px] font-semibold py-md px-lg rounded-lg hover:opacity-90 transition-all active:scale-[0.98] flex justify-center items-center gap-sm shadow-sm">
-                <span className="material-symbols-outlined text-[20px]">calculate</span>
-                Hitung Sekarang
+              <button
+                onClick={hitung}
+                disabled={isSaving}
+                className="flex-1 bg-primary text-primary-foreground text-[14px] font-semibold py-md px-lg rounded-lg hover:opacity-90 transition-all active:scale-[0.98] flex justify-center items-center gap-sm shadow-sm disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  {isSaving ? "progress_activity" : "calculate"}
+                </span>
+                {isSaving ? "Memproses..." : "Hitung Sekarang"}
               </button>
-              <button onClick={saveProfile} className="flex-1 bg-secondary text-secondary-foreground text-[14px] font-semibold py-md px-lg rounded-lg hover:opacity-90 transition-all active:scale-[0.98] flex justify-center items-center gap-sm shadow-sm">
-                <span className="material-symbols-outlined text-[20px]">bookmark</span>
-                Simpan ke Profil
+
+              <button
+                onClick={saveProfile}
+                disabled={isSaving || !hasil}
+                className="flex-1 bg-secondary text-secondary-foreground text-[14px] font-semibold py-md px-lg rounded-lg hover:opacity-90 transition-all active:scale-[0.98] flex justify-center items-center gap-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  {isSaving ? "progress_activity" : "bookmark"}
+                </span>
+                {isSaving ? "Menyimpan..." : "Simpan ke Profil"}
               </button>
             </div>
           </div>
         </section>
 
-        {/* ════════════ HASIL PANEL ════════════ */}
+        {/* HASIL PANEL */}
         <section className="lg:col-span-5 flex flex-col gap-lg reveal-right reveal-delay-100">
           <div className="bg-card rounded-xl p-lg md:p-xl shadow-sm border border-border relative overflow-hidden flex-grow">
             <h2 className="text-[20px] font-semibold tracking-tight text-primary mb-lg relative z-10">
@@ -262,14 +364,14 @@ export default function KalkulatorPage() {
               <ResultCard variant="secondary" label={`Target Sesuai Tujuan (${hasil?.goalLabel ?? "Pertahankan BB"})`} value={hasil ? formatNum(hasil.target) : "–"} unit="kkal / hari" />
               <ResultCard label="Basal Metabolic Rate (BMR)" value={hasil ? formatNum(hasil.bmr) : "–"} unit="kkal" sub="Energi minimal untuk fungsi dasar tubuh saat istirahat." />
             </div>
-            
+
             <div className="mt-lg pt-lg border-t border-border/50 relative z-10">
               <div className="text-[13px] font-semibold text-foreground mb-md">Estimasi Makronutrien</div>
               <div className="grid grid-cols-3 gap-sm">
                 {[
-                  { label: "Karbo",   value: hasil ? `${hasil.karbo}g`   : "–", color: "text-primary" },
+                  { label: "Karbo", value: hasil ? `${hasil.karbo}g` : "–", color: "text-primary" },
                   { label: "Protein", value: hasil ? `${hasil.protein}g` : "–", color: "text-secondary" },
-                  { label: "Lemak",   value: hasil ? `${hasil.lemak}g`   : "–", color: "text-muted-foreground" },
+                  { label: "Lemak", value: hasil ? `${hasil.lemak}g` : "–", color: "text-muted-foreground" },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="bg-surface rounded-md p-sm text-center border border-border">
                     <div className="text-[11px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-1">{label}</div>
@@ -278,7 +380,7 @@ export default function KalkulatorPage() {
                 ))}
               </div>
             </div>
-            
+
             <div className="mt-xl relative z-10">
               <p className="text-[11px] text-muted-foreground/80 mb-2 leading-relaxed">
                 Hasil bersifat informatif dan tidak digunakan sebagai acuan medis.

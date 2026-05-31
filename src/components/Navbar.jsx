@@ -1,7 +1,8 @@
-// src/components/Navbar.jsx
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logoGiziMeal from '../assets/logo.png';
+import logoDark from '../assets/logo-dark-transparan.png';
+import logoLight from '../assets/logo-light-transparan.png'
 
 const navLinks = [
   { label: "Beranda", to: "/" },
@@ -34,7 +35,6 @@ export default function Navbar({ darkMode, toggleDark }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close profile dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -62,10 +62,10 @@ export default function Navbar({ darkMode, toggleDark }) {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 text-primary font-bold text-[18px]">
-           <img 
-              src={logoGiziMeal} 
-              alt="GiziMeal" 
-              className="h-8 w-auto" 
+            <img
+              src={darkMode ? logoDark : logoLight}
+              alt="GiziMeal"
+              className="h-8 w-auto"
             />
           </Link>
 
@@ -89,27 +89,66 @@ export default function Navbar({ darkMode, toggleDark }) {
             })}
           </div>
 
-          {/* Right — Profile dropdown */}
-          <div className="flex items-center gap-sm">
-            {/* Profile dropdown */}
-            <div className="relative" ref={profileRef}>
+          {/* Right — Controls Area */}
+          <div className="flex items-center gap-xs sm:gap-sm h-full">
+
+            {/* TOMBOL THEME GLOBAL */}
+            <button
+              onClick={toggleDark}
+              aria-label="Toggle dark mode"
+              className="text-on-surface hover:text-primary hover:bg-surface-container-low transition-all p-1 rounded-full active:scale-95 flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-[22px]">
+                {darkMode ? "light_mode" : "dark_mode"}
+              </span>
+            </button>
+
+            {/* Profile area */}
+            {/* Perubahan: Tambahkan flex dan items-center agar pembungkusnya tidak melar */}
+            <div className="relative flex items-center" ref={profileRef}>
               <button
                 onClick={() => isLogged ? setProfileOpen(!profileOpen) : navigate("/auth/login")}
-                className="flex items-center gap-xs text-on-surface hover:text-primary hover:bg-surface-container-low transition-all p-1 rounded-full active:scale-95"
+                className="flex items-center justify-center text-on-surface hover:text-primary hover:bg-surface-container-low transition-all p-1 rounded-full active:scale-95"
                 aria-label="Profil"
               >
                 <span className="material-symbols-outlined text-[22px]">account_circle</span>
               </button>
 
               {/* Dropdown menu */}
+              {/* Perubahan: top diubah ke [28px] agar mendesak naik ke atas mendekati tombol */}
               {isLogged && profileOpen && (
-                <div className="absolute right-0 top-10 w-48 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-50 overflow-hidden">
+                <div className="absolute right-0 top-[28px] w-48 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-50 overflow-hidden">
                   <div className="px-md py-sm border-b border-outline-variant">
                     <p className="text-[12px] font-semibold text-on-surface truncate">
-                      {localStorage.getItem("userName") || "Pengguna"}
+                      {(() => {
+                        const userRaw = localStorage.getItem("user");
+                        if (!userRaw) return "Pengguna";
+
+                        try {
+                          const userObj = JSON.parse(userRaw);
+                          const metadata = userObj.user_metadata || userObj.meta || {};
+                          const first = metadata.firstName || metadata.first_name || "";
+                          const last = metadata.lastName || metadata.last_name || "";
+                          const fullName = `${first} ${last}`.trim();
+                          if (fullName) return fullName;
+                          if (userObj.email) return userObj.email.split("@")[0];
+
+                          return "Pengguna";
+                        } catch (e) {
+                          return "Pengguna";
+                        }
+                      })()}
                     </p>
                     <p className="text-[11px] text-on-surface-variant truncate">
-                      {localStorage.getItem("userEmail") || ""}
+                      {(() => {
+                        const userRaw = localStorage.getItem("user");
+                        if (!userRaw) return "";
+                        try {
+                          return JSON.parse(userRaw).email || "";
+                        } catch (e) {
+                          return "";
+                        }
+                      })()}
                     </p>
                   </div>
                   <button
@@ -118,13 +157,6 @@ export default function Navbar({ darkMode, toggleDark }) {
                   >
                     <span className="material-symbols-outlined text-[16px]">person</span>
                     Profil Saya
-                  </button>
-                  <button
-                    onClick={toggleDark}
-                    className="w-full flex items-center gap-sm px-md py-sm text-[13px] text-on-surface hover:bg-surface-container transition-colors text-left"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">{darkMode ? "light_mode" : "dark_mode"}</span>
-                    {darkMode ? "Mode Terang" : "Mode Gelap"}
                   </button>
                   <div className="border-t border-outline-variant">
                     <button
@@ -139,20 +171,7 @@ export default function Navbar({ darkMode, toggleDark }) {
               )}
             </div>
 
-            {/* Dark mode (only when not logged in) */}
-            {!isLogged && (
-              <button
-                onClick={toggleDark}
-                aria-label="Toggle dark mode"
-                className="text-on-surface hover:text-primary hover:bg-surface-container-low transition-all p-1 rounded-full active:scale-95"
-              >
-                <span className="material-symbols-outlined text-[22px]">
-                  {darkMode ? "light_mode" : "dark_mode"}
-                </span>
-              </button>
-            )}
-
-            {/* Masuk button (only when not logged in) */}
+            {/* Masuk button (Hanya tampil saat tidak login) */}
             {!isLogged && (
               <button
                 className="bg-primary text-on-primary font-semibold text-[13px] px-md py-xs rounded-lg hover:opacity-90 transition-colors active:scale-95 hidden md:block"
@@ -164,7 +183,7 @@ export default function Navbar({ darkMode, toggleDark }) {
 
             {/* Mobile hamburger */}
             <button
-              className="md:hidden text-on-surface p-1"
+              className="md:hidden text-on-surface p-1 flex items-center justify-center"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Toggle menu"
             >
@@ -211,6 +230,7 @@ export default function Navbar({ darkMode, toggleDark }) {
             </div>
 
             <div className="mt-auto pt-sm border-t border-outline-variant flex flex-col gap-xs">
+              {/* Di mobile drawer, tombol mode gelap tetap dipertahankan di bagian bawah demi kemudahan akses */}
               <button
                 onClick={toggleDark}
                 className="flex items-center gap-sm px-md py-sm text-[14px] text-on-surface hover:bg-surface-container rounded-lg transition-colors"

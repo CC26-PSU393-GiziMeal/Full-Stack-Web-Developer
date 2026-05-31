@@ -1,17 +1,7 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const USER_KEY = "gizimeal_user";
-const CALC_KEY = "kalkulatorProfile";
-const SCAN_KEY = "gizimeal_scan_history";
-
-const DEFAULT_USER = {
-  name: "Muhammad Dava Arya Nada Putra",
-  username: "mdavaarya",
-  email: "dava@example.com",
-  joined: "Mei 2025",
-  avatar: null,
-};
 
 function getInitials(name = "") {
   return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
@@ -37,17 +27,51 @@ function ModalGantiPassword({ onClose }) {
   const [show, setShow] = useState({ lama: false, baru: false, konfirmasi: false });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const toggle = (k) => setShow((s) => ({ ...s, [k]: !s[k] }));
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.lama || !form.baru || !form.konfirmasi) { setError("Semua field wajib diisi."); return; }
     if (form.baru.length < 8) { setError("Password baru minimal 8 karakter."); return; }
     if (form.baru !== form.konfirmasi) { setError("Konfirmasi password tidak cocok."); return; }
+    
     setError("");
-    setSuccess(true);
-    setTimeout(onClose, 1500);
+    setLoading(true);
+
+    try {
+      const userRaw = localStorage.getItem("user");
+      if (!userRaw) {
+        throw new Error("Sesi Anda telah berakhir. Silakan login kembali.");
+      }
+      const userId = JSON.parse(userRaw).id;
+
+      const response = await fetch("http://localhost:3000/api/users/changePassword", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userId: userId,
+          passwordBaru: form.baru
+        }),
+      });
+
+      const jsonResult = await response.json();
+
+      if (!response.ok) {
+        throw new Error(jsonResult.error || "Gagal memperbarui kata sandi.");
+      }
+
+      setSuccess(true);
+      setTimeout(onClose, 1500);
+    } catch (err) {
+      console.error("Ganti Password Error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputClass = "w-full bg-surface-alt border border-border rounded-lg py-md pl-md pr-12 text-foreground focus:outline-none focus:ring-1 focus:ring-secondary text-[15px]";
@@ -57,7 +81,7 @@ function ModalGantiPassword({ onClose }) {
       <div className="bg-card rounded-[24px] border border-border p-xl w-full max-w-md shadow-2xl">
         <div className="flex justify-between items-center mb-lg">
           <h3 className="text-[20px] tracking-tight text-primary font-semibold">Ganti Password</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 rounded-full transition-colors">
+          <button onClick={onClose} disabled={loading} className="text-muted-foreground hover:text-foreground p-1 rounded-full transition-colors disabled:opacity-30">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -80,18 +104,24 @@ function ModalGantiPassword({ onClose }) {
                     type={show[key] ? "text" : "password"}
                     value={form[key]}
                     onChange={set(key)}
+                    disabled={loading}
                     placeholder="••••••••"
-                    className={inputClass}
+                    className={`${inputClass} disabled:opacity-50`}
                   />
-                  <button type="button" onClick={() => toggle(key)} className="absolute right-md top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <button type="button" onClick={() => toggle(key)} disabled={loading} className="absolute right-md top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-30">
                     <span className="material-symbols-outlined text-[18px]">{show[key] ? "visibility_off" : "visibility"}</span>
                   </button>
                 </div>
               </div>
             ))}
             {error && <p className="text-[13px] text-destructive font-medium">{error}</p>}
-            <button onClick={submit} className="w-full bg-primary text-primary-foreground font-semibold py-md rounded-xl hover:opacity-90 transition-all active:scale-[0.98] mt-sm">
-              Simpan Password
+            <button 
+              onClick={submit} 
+              disabled={loading}
+              className="w-full bg-primary text-primary-foreground font-semibold py-md rounded-xl hover:opacity-90 transition-all active:scale-[0.98] mt-sm flex items-center justify-center gap-xs disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
+              {loading ? "Menyimpan..." : "Simpan Password"}
             </button>
           </div>
         )}
@@ -147,23 +177,56 @@ function ModalHapusAkun({ onClose, onConfirm }) {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const isLogged = !!localStorage.getItem("authToken");
-  const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(USER_KEY)) || DEFAULT_USER; } catch { return DEFAULT_USER; }
-  });
+
+  const [userProfile, setUserProfile] = useState({ name: "Pengguna", email: "", username: "" });
   const [calcData, setCalcData] = useState(null);
+  const [biometrik, setBiometrik] = useState(null); 
   const [scanHistory, setScanHistory] = useState([]);
   const [modal, setModal] = useState(null);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    try {
-      const c = localStorage.getItem(CALC_KEY);
-      if (c) setCalcData(JSON.parse(c));
-    } catch { }
-    try {
-      const s = localStorage.getItem(SCAN_KEY);
-      if (s) setScanHistory(JSON.parse(s));
-    } catch { }
-  }, []);
+    if (!isLogged) return;
+    const userRaw = localStorage.getItem("user");
+    if (userRaw) {
+      try {
+        const parsed = JSON.parse(userRaw);
+        const metadata = parsed.user_metadata || {};
+        const first = metadata.firstName || "";
+        const last = metadata.lastName || "";
+        setUserProfile({
+          name: `${first} ${last}`.trim() || "Pengguna GiziMeal",
+          email: parsed.email || "",
+          username: parsed.email ? parsed.email.split("@")[0] : "user"
+        });
+      } catch (err) {
+        console.error("Gagal membaca session user lokal", err);
+      }
+    }
+
+    const fetchBackendData = async () => {
+      try {
+        const userRaw = localStorage.getItem("user");
+        if (!userRaw) return;
+        const userId = JSON.parse(userRaw).id;
+
+        const response = await fetch(`http://localhost:3000/api/users/profile/${userId}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          setCalcData(data.calcData);
+          setBiometrik(data.biometrikData); 
+          setScanHistory(data.scanHistory || []);
+        }
+      } catch (err) {
+        console.error("Gagal memuat data profil dari server:", err);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchBackendData();
+  }, [isLogged]);
 
   if (!isLogged) {
     return (
@@ -178,7 +241,7 @@ export default function ProfilePage() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
+    localStorage.clear();
     navigate("/");
   };
 
@@ -193,16 +256,33 @@ export default function ProfilePage() {
     { icon: "database", label: "Database Gizi", desc: "Cari informasi nutrisi bahan makanan", to: "/database" },
   ];
 
-  const infoItems = [
-    { label: "Nama Lengkap", value: user.name, icon: "badge" },
-    { label: "Username", value: `@${user.username}`, icon: "alternate_email" },
-    { label: "Email", value: user.email, icon: "mail" },
+  const accountItems = [
+    { label: "Nama Lengkap", value: userProfile.name, icon: "badge" },
+    { label: "Username", value: `@${userProfile.username}`, icon: "alternate_email" },
+    { label: "Email", value: userProfile.email, icon: "mail" },
   ];
 
-  const displayHistory = scanHistory.length > 0 ? scanHistory : [
-    { id: 1, bahan: "Bayam, Wortel, Tempe", waktu: "Hari ini, 12:34", skor: 87 },
-    { id: 2, bahan: "Ayam, Brokoli, Nasi", waktu: "Kemarin, 19:10", skor: 92 },
-    { id: 3, bahan: "Tahu, Kangkung", waktu: "2 hari lalu, 08:22", skor: 78 },
+  const biometrikItems = [
+    { 
+      label: "Jenis Kelamin", 
+      value: biometrik ? (biometrik.gender === 'pria' ? 'Laki-laki' : 'Perempuan') : "–", 
+      icon: "wc" 
+    },
+    { 
+      label: "Usia Pengguna", 
+      value: biometrik ? `${biometrik.usia} Tahun` : "–", 
+      icon: "cake" 
+    },
+    { 
+      label: "Berat Badan", 
+      value: biometrik ? `${biometrik.berat} kg` : "–", 
+      icon: "weight" 
+    },
+    { 
+      label: "Tinggi Badan", 
+      value: biometrik ? `${biometrik.tinggi} cm` : "–", 
+      icon: "straighten" 
+    },
   ];
 
   return (
@@ -212,34 +292,35 @@ export default function ProfilePage() {
 
       <main className="flex-grow w-full max-w-5xl mx-auto px-container-margin md:px-lg py-xl md:py-lg space-y-lg">
 
+        {/* Top Header Card */}
         <section className="flex flex-col items-center text-center gap-md reveal">
           <div className="relative">
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full object-cover border-4 border-primary" />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center border-4 border-surface">
-                <span className="text-primary text-[32px] font-semibold">{getInitials(user.name)}</span>
-              </div>
-            )}
+            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center border-4 border-surface">
+              <span className="text-primary text-[32px] font-semibold">{getInitials(userProfile.name)}</span>
+            </div>
             <div className="absolute bottom-0 right-0 w-6 h-6 bg-secondary rounded-full border-2 border-surface flex items-center justify-center">
               <span className="material-symbols-outlined text-secondary-foreground text-[14px]">check</span>
             </div>
           </div>
           <div className="space-y-xs">
-            <h1 className="text-[24px] tracking-tight text-foreground font-semibold">{user.name}</h1>
-            <p className="text-[14px] text-secondary font-medium">@{user.username}</p>
-            <p className="text-[15px] text-muted-foreground">{user.email}</p>
+            <h1 className="text-[24px] tracking-tight text-foreground font-semibold">{userProfile.name}</h1>
+            <p className="text-[14px] text-secondary font-medium">
+              @{userProfile.username}
+              {biometrik && ` • ${biometrik.gender === 'pria' ? 'Laki-laki' : 'Perempuan'}, ${biometrik.usia} Thn`}
+            </p>
+            <p className="text-[15px] text-muted-foreground">{userProfile.email}</p>
           </div>
         </section>
 
-        <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal reveal-delay-100 shadow-sm">
+        {/* SECTION 1: Informasi Akun (Nama, Email, Username) tetap aman di sini */}
+        <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
           <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
             <span className="material-symbols-outlined text-[22px]">person</span>
             Informasi Akun
           </h2>
           <ul className="flex flex-col">
-            {infoItems.map((item, idx) => (
-              <li key={item.label} className={`flex items-center gap-md py-md ${idx !== infoItems.length - 1 ? 'border-b border-border/50' : ''}`}>
+            {accountItems.map((item, idx) => (
+              <li key={item.label} className={`flex items-center gap-md py-md ${idx !== accountItems.length - 1 ? 'border-b border-border/50' : ''}`}>
                 <span className="material-symbols-outlined text-muted-foreground text-[24px] flex-shrink-0">{item.icon}</span>
                 <div className="flex-grow min-w-0">
                   <p className="text-[12px] font-medium tracking-[0.05em] uppercase text-muted-foreground">{item.label}</p>
@@ -250,15 +331,35 @@ export default function ProfilePage() {
           </ul>
         </section>
 
-        <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal reveal-delay-100 shadow-sm">
-          <div className="flex justify-between items-center mb-sm">
-            <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
-              <span className="material-symbols-outlined text-[22px]">monitor_weight</span>
-              Data Biometrik & Nutrisi
-            </h2>
-          </div>
+        {/* SECTION 2: Informasi Fisik & Biometrik (Usia, Berat, Tinggi) berjejer rapi di bawahnya */}
+        <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
+          <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
+            <span className="material-symbols-outlined text-[22px]">accessibility_new</span>
+            Informasi Fisik & Biometrik
+          </h2>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-lg">
+            {biometrikItems.map((item) => (
+              <li key={item.label} className="flex items-center gap-md py-md border-b border-border/50">
+                <span className="material-symbols-outlined text-muted-foreground text-[24px] flex-shrink-0">{item.icon}</span>
+                <div className="flex-grow min-w-0">
+                  <p className="text-[12px] font-medium tracking-[0.05em] uppercase text-muted-foreground">{item.label}</p>
+                  <p className="text-[15px] text-foreground font-medium truncate">{item.value}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-          {(!calcData || !calcData.form || !calcData.hasil) ? (
+        {/* Data Target Nutrisi Harian (Tabel kalkulator_results) */}
+        <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
+          <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
+            <span className="material-symbols-outlined text-[22px]">monitor_weight</span>
+            Target Kebutuhan Nutrisi Harian
+          </h2>
+
+          {loadingData ? (
+            <p className="text-center py-md text-muted-foreground text-[14px]">Menyelaraskan data nutrisi...</p>
+          ) : !calcData ? (
             <div className="flex flex-col items-center justify-center py-xl text-center">
               <div className="w-16 h-16 bg-surface-alt rounded-full flex items-center justify-center mb-md border border-border">
                 <span className="material-symbols-outlined text-[32px] text-muted-foreground">calculate</span>
@@ -271,57 +372,36 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-xl">
               <div>
-                <h3 className="text-[14px] font-semibold text-foreground mb-md border-b border-border/50 pb-xs">Profil Biometrik</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-y-md gap-x-lg">
                   <div>
-                    <p className="text-[12px] text-muted-foreground mb-1">Jenis Kelamin</p>
-                    <p className="font-medium text-foreground capitalize">{calcData.form.gender === 'pria' ? 'Laki-laki' : 'Perempuan'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[12px] text-muted-foreground mb-1">Usia</p>
-                    <p className="font-medium text-foreground tabular-nums">{calcData.form.usia} Tahun</p>
-                  </div>
-                  <div>
-                    <p className="text-[12px] text-muted-foreground mb-1">Berat Badan</p>
-                    <p className="font-medium text-foreground tabular-nums">{calcData.form.berat} kg</p>
-                  </div>
-                  <div>
-                    <p className="text-[12px] text-muted-foreground mb-1">Tinggi Badan</p>
-                    <p className="font-medium text-foreground tabular-nums">{calcData.form.tinggi} cm</p>
-                  </div>
-                  <div className="col-span-2 md:col-span-2">
-                    <p className="text-[12px] text-muted-foreground mb-1">Tingkat Aktivitas Fisik (PAL)</p>
-                    <p className="font-medium text-foreground">{getAktivitasLabel(calcData.form.aktivitas)}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-[14px] font-semibold text-foreground mb-md border-b border-border/50 pb-xs">Target Nutrisi Harian</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-md gap-x-lg">
-                  <div>
-                    <p className="text-[12px] text-muted-foreground mb-1">Target ({calcData.hasil.goalLabel})</p>
-                    <p className="font-semibold text-primary text-[18px] tabular-nums">{formatNum(calcData.hasil.target)} kkal</p>
+                    <p className="text-[12px] text-muted-foreground mb-1">Target Kalori ({calcData.goalLabel})</p>
+                    <p className="font-semibold text-primary text-[18px] tabular-nums">{formatNum(calcData.target)} kkal</p>
                   </div>
                   <div>
                     <p className="text-[12px] text-muted-foreground mb-1">TDEE</p>
-                    <p className="font-medium text-foreground tabular-nums">{formatNum(calcData.hasil.tdee)} kkal</p>
+                    <p className="font-medium text-foreground tabular-nums">{formatNum(calcData.tdee)} kkal</p>
                   </div>
                   <div>
                     <p className="text-[12px] text-muted-foreground mb-1">BMR</p>
-                    <p className="font-medium text-foreground tabular-nums">{formatNum(calcData.hasil.bmr)} kkal</p>
+                    <p className="font-medium text-foreground tabular-nums">{formatNum(calcData.bmr)} kkal</p>
                   </div>
-                  <div>
-                    <p className="text-[12px] text-muted-foreground mb-1">Karbohidrat</p>
-                    <p className="font-medium text-foreground tabular-nums">{calcData.hasil.karbo} g</p>
-                  </div>
-                  <div>
-                    <p className="text-[12px] text-muted-foreground mb-1">Protein</p>
-                    <p className="font-medium text-foreground tabular-nums">{calcData.hasil.protein} g</p>
-                  </div>
-                  <div>
-                    <p className="text-[12px] text-muted-foreground mb-1">Lemak</p>
-                    <p className="font-medium text-foreground tabular-nums">{calcData.hasil.lemak} g</p>
+                </div>
+
+                <div className="mt-lg pt-md border-t border-border/30">
+                  <h4 className="text-[13px] font-semibold text-foreground mb-sm">Kebutuhan Zat Gizi Makro</h4>
+                  <div className="grid grid-cols-3 gap-md">
+                    <div className="bg-surface-alt p-sm rounded-xl border border-border/50 text-center">
+                      <p className="text-[11px] text-muted-foreground uppercase font-medium">Karbohidrat</p>
+                      <p className="font-bold text-foreground text-[16px] mt-xs tabular-nums">{calcData.karbo} g</p>
+                    </div>
+                    <div className="bg-surface-alt p-sm rounded-xl border border-border/50 text-center">
+                      <p className="text-[11px] text-muted-foreground uppercase font-medium">Protein</p>
+                      <p className="font-bold text-foreground text-[16px] mt-xs tabular-nums">{calcData.protein} g</p>
+                    </div>
+                    <div className="bg-surface-alt p-sm rounded-xl border border-border/50 text-center">
+                      <p className="text-[11px] text-muted-foreground uppercase font-medium">Lemak</p>
+                      <p className="font-bold text-foreground text-[16px] mt-xs tabular-nums">{calcData.lemak} g</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -329,7 +409,8 @@ export default function ProfilePage() {
           )}
         </section>
 
-        <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal reveal-delay-200 shadow-sm">
+        {/* Riwayat Scan */}
+        <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
           <div className="flex justify-between items-center">
             <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
               <span className="material-symbols-outlined text-[22px]">history</span>
@@ -339,31 +420,38 @@ export default function ProfilePage() {
               Scan baru <span className="material-symbols-outlined text-[16px]">add</span>
             </button>
           </div>
-          <ul className="space-y-sm">
-            {displayHistory.map((item) => (
-              <li key={item.id} className="flex items-center gap-md bg-surface p-md rounded-xl border border-border hover:border-secondary transition-colors group cursor-pointer shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-secondary text-[20px]">document_scanner</span>
-                </div>
-                <div className="flex-grow min-w-0">
-                  <p className="text-[15px] text-foreground font-medium truncate">{item.bahan}</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">{item.waktu}</p>
-                </div>
-                <div className="flex items-center gap-sm flex-shrink-0">
-                  <span className={`text-[13px] font-semibold px-sm py-xs rounded-full tabular-nums ${item.skor >= 85 ? "bg-secondary/10 text-secondary" : item.skor >= 70 ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
-                    {item.skor}
-                  </span>
-                  <span className="material-symbols-outlined text-muted-foreground group-hover:text-secondary transition-colors text-[18px]">chevron_right</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-          {scanHistory.length === 0 && (
-            <p className="text-[12px] text-muted-foreground/60 italic text-center pt-xs leading-relaxed">* Data riwayat ini adalah contoh tampilan. Riwayat asli tersimpan setelah scan.</p>
+          
+          {loadingData ? (
+            <p className="text-center py-sm text-muted-foreground">Memuat riwayat...</p>
+          ) : scanHistory.length === 0 ? (
+            <div className="text-center py-lg border border-dashed border-border rounded-xl">
+               <p className="text-muted-foreground text-[14px]">Belum ada riwayat hasil deteksi makanan.</p>
+            </div>
+          ) : (
+            <ul className="space-y-sm">
+              {scanHistory.map((item) => (
+                <li key={item.id} className="flex items-center gap-md bg-surface p-md rounded-xl border border-border hover:border-secondary transition-colors group cursor-pointer shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="material-symbols-outlined text-secondary text-[20px]">document_scanner</span>
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <p className="text-[15px] text-foreground font-medium truncate">{item.bahan}</p>
+                    <p className="text-[12px] text-muted-foreground mt-0.5">{item.waktu}</p>
+                  </div>
+                  <div className="flex items-center gap-sm flex-shrink-0">
+                    <span className={`text-[13px] font-semibold px-sm py-xs rounded-full tabular-nums ${item.skor >= 85 ? "bg-secondary/10 text-secondary" : item.skor >= 70 ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
+                      {item.skor}
+                    </span>
+                    <span className="material-symbols-outlined text-muted-foreground group-hover:text-secondary transition-colors text-[18px]">chevron_right</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
 
-        <section className="space-y-md reveal reveal-delay-200">
+        {/* Akses Cepat */}
+        <section className="space-y-md reveal">
           <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
             <span className="material-symbols-outlined text-[22px]">apps</span>
             Akses Cepat
@@ -387,7 +475,8 @@ export default function ProfilePage() {
           </ul>
         </section>
 
-        <section className="space-y-md reveal reveal-delay-300">
+        {/* Pengaturan Akun */}
+        <section className="space-y-md reveal">
           <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
             <span className="material-symbols-outlined text-[22px]">settings</span>
             Pengaturan Akun

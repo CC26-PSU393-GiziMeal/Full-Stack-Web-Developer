@@ -1,28 +1,6 @@
-import { useState, useMemo } from "react";
+/* eslint-disable react-hooks/rules-of-hooks */
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-const MOCK_DATA = [
-  { id: 1, SearchKey: "butternaan", "Food Items": "Butternaan", "Energy kcal": 300, Carbs: 50, "Protein(g)": 7, "Fat(g)": 10, "Fibre(g)": 2, "Calcium(mg)": 50, score_akg: 40.35 },
-  { id: 2, SearchKey: "cupcake", "Food Items": "Cupcake", "Energy kcal": 200, Carbs: 30, "Protein(g)": 2, "Fat(g)": 8, "Fibre(g)": 0.5, "Calcium(mg)": 20, score_akg: 22.45 },
-  { id: 3, SearchKey: "donuts", "Food Items": "Donuts", "Energy kcal": 250, Carbs: 30, "Protein(g)": 3, "Fat(g)": 12, "Fibre(g)": 1, "Calcium(mg)": 20, score_akg: 18.90 },
-  { id: 4, SearchKey: "garlicbread", "Food Items": "Garlic Bread", "Energy kcal": 200, Carbs: 25, "Protein(g)": 4, "Fat(g)": 10, "Fibre(g)": 1, "Calcium(mg)": 30, score_akg: 25.10 },
-  { id: 5, SearchKey: "grilledcheesesandwich", "Food Items": "Grilled Cheese Sandwich", "Energy kcal": 400, Carbs: 30, "Protein(g)": 12, "Fat(g)": 25, "Fibre(g)": 2, "Calcium(mg)": 200, score_akg: 35.80 },
-  { id: 6, SearchKey: "icecream", "Food Items": "Ice Cream", "Energy kcal": 207, Carbs: 24, "Protein(g)": 3.5, "Fat(g)": 11, "Fibre(g)": 0.5, "Calcium(mg)": 100, score_akg: 15.30 },
-  { id: 7, SearchKey: "onionrings", "Food Items": "Onion Rings", "Energy kcal": 275, Carbs: 31, "Protein(g)": 3, "Fat(g)": 15, "Fibre(g)": 2, "Calcium(mg)": 30, score_akg: 12.40 },
-  { id: 8, SearchKey: "strawberryshortcake", "Food Items": "Strawberry Shortcake", "Energy kcal": 250, Carbs: 35, "Protein(g)": 3, "Fat(g)": 12, "Fibre(g)": 1, "Calcium(mg)": 50, score_akg: 16.75 },
-  { id: 9, SearchKey: "waffles", "Food Items": "Waffles", "Energy kcal": 220, Carbs: 20, "Protein(g)": 13, "Fat(g)": 11, "Fibre(g)": 3, "Calcium(mg)": 100, score_akg: 32.20 },
-  { id: 10, SearchKey: "hottea", "Food Items": "Hot tea", "Energy kcal": 16.14, Carbs: 2.58, "Protein(g)": 0.39, "Fat(g)": 0.53, "Fibre(g)": 0, "Calcium(mg)": 14.2, score_akg: 5.10 },
-  { id: 11, SearchKey: "ayambakar", "Food Items": "Ayam Bakar", "Energy kcal": 298, Carbs: 5, "Protein(g)": 32, "Fat(g)": 16, "Fibre(g)": 0, "Calcium(mg)": 18, score_akg: 45.50 },
-  { id: 12, SearchKey: "tempegoreng", "Food Items": "Tempe Goreng", "Energy kcal": 190, Carbs: 10, "Protein(g)": 14, "Fat(g)": 11, "Fibre(g)": 3.5, "Calcium(mg)": 111, score_akg: 38.60 },
-  { id: 13, SearchKey: "sayurbayam", "Food Items": "Sayur Bayam", "Energy kcal": 36, Carbs: 3.6, "Protein(g)": 3.5, "Fat(g)": 0.4, "Fibre(g)": 2.2, "Calcium(mg)": 99, score_akg: 52.10 },
-  { id: 14, SearchKey: "nasiputih", "Food Items": "Nasi Putih", "Energy kcal": 175, Carbs: 38, "Protein(g)": 3.2, "Fat(g)": 0.4, "Fibre(g)": 0.6, "Calcium(mg)": 10, score_akg: 21.00 },
-  { id: 15, SearchKey: "telurrebus", "Food Items": "Telur Rebus", "Energy kcal": 155, Carbs: 1.1, "Protein(g)": 13, "Fat(g)": 11, "Fibre(g)": 0, "Calcium(mg)": 50, score_akg: 42.00 },
-  { id: 16, SearchKey: "tahugoreng", "Food Items": "Tahu Goreng", "Energy kcal": 150, Carbs: 4, "Protein(g)": 10, "Fat(g)": 11, "Fibre(g)": 0.3, "Calcium(mg)": 204, score_akg: 34.00 },
-  { id: 17, SearchKey: "ikansalmonbakar", "Food Items": "Ikan Salmon Bakar", "Energy kcal": 208, Carbs: 0, "Protein(g)": 20, "Fat(g)": 13, "Fibre(g)": 0, "Calcium(mg)": 13, score_akg: 48.00 },
-  { id: 18, SearchKey: "brokolikukus", "Food Items": "Brokoli Kukus", "Energy kcal": 55, Carbs: 11, "Protein(g)": 3.7, "Fat(g)": 0.6, "Fibre(g)": 5.1, "Calcium(mg)": 47, score_akg: 56.40 },
-  { id: 19, SearchKey: "dagingsapirendang", "Food Items": "Daging Sapi Rendang", "Energy kcal": 468, Carbs: 7, "Protein(g)": 35, "Fat(g)": 34, "Fibre(g)": 1, "Calcium(mg)": 30, score_akg: 39.50 },
-  { id: 20, SearchKey: "supwortel", "Food Items": "Sup Wortel", "Energy kcal": 90, Carbs: 14, "Protein(g)": 3, "Fat(g)": 2.5, "Fibre(g)": 3, "Calcium(mg)": 40, score_akg: 44.00 },
-];
 
 const ITEMS_PER_PAGE = 10;
 
@@ -63,6 +41,59 @@ export default function DatabaseGiziPage() {
   const navigate = useNavigate();
   const isLogged = !!localStorage.getItem('authToken');
 
+  const [foodsData, setFoodsData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState("default");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    if (!isLogged) return;
+
+    const fetchFoods = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("https://cc26-psu393-gizimeal-api.hf.space/foods");
+
+        if (!response.ok) {
+          throw new Error("Gagal mengambil dataset dari server gizi.");
+        }
+
+        const jsonResult = await response.json();
+
+        const rawRows = jsonResult.data || (Array.isArray(jsonResult) ? jsonResult : []);
+
+        const formattedData = rawRows.map((item, index) => {
+          const namaMakanan = item["Food Items"] || item.food_items || "Tidak Diketahui";
+          const searchKey = item.SearchKey || (typeof namaMakanan === 'string' ? namaMakanan.toLowerCase().replace(/\s+/g, '') : "");
+
+          return {
+            id: item.id || index + 1,
+            SearchKey: searchKey,
+            "Food Items": namaMakanan,
+            "Energy kcal": parseFloat(item["Energy kcal"] || 0),
+            Carbs: parseFloat(item.Carbs || item.carbohydrates || 0),
+            "Protein(g)": parseFloat(item["Protein(g)"] || 0),
+            "Fat(g)": parseFloat(item["Fat(g)"] || 0),
+            "Fibre(g)": parseFloat(item["Fibre(g)"] || 0),
+            "Calcium(mg)": parseFloat(item["Calcium(mg)"] || 0),
+          };
+        });
+
+        setFoodsData(formattedData);
+        setErrorMessage("");
+      } catch (err) {
+        console.error("Database Gizi Error:", err);
+        setErrorMessage(err.message);
+      } {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFoods();
+  }, [isLogged]);
+
   if (!isLogged) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen p-8">
@@ -80,18 +111,14 @@ export default function DatabaseGiziPage() {
     );
   }
 
-  const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState("default");
-  const [page, setPage] = useState(1);
-
   const filtered = useMemo(() => {
-    let d = MOCK_DATA;
+    let d = foodsData;
     if (search.trim()) {
       const q = search.toLowerCase();
       d = d.filter((r) => r["Food Items"].toLowerCase().includes(q) || r.SearchKey.toLowerCase().includes(q));
     }
     return sortData(d, sortKey);
-  }, [search, sortKey]);
+  }, [foodsData, search, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const safePage = Math.min(page, totalPages);
@@ -131,19 +158,22 @@ export default function DatabaseGiziPage() {
         </button>
 
         <h1 className="text-[28px] md:text-[36px] tracking-tight font-semibold text-primary mb-md leading-[1.05]">
-          Data Makanan & Resep Sehat
+          Data Makanan & Resep
         </h1>
         <p className="text-[15px] leading-relaxed text-muted-foreground mb-lg">
-          Pencarian informasi nutrisi dengan dataset awal dari Kaggle yang diverifikasi ulang menggunakan acuan AKG dan Pedoman Gizi Seimbang Kemenkes RI.
+          Pencarian informasi nutrisi terintegrasi real-time diverifikasi menggunakan acuan AKG dan Pedoman Gizi Seimbang Kemenkes RI.
         </p>
         <div className="relative w-full max-w-2xl mx-auto shadow-sm rounded-2xl group">
-          <span className="material-symbols-outlined absolute left-lg top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">search</span>
+          <span className="material-symbols-outlined absolute left-lg top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-colors">
+            search
+          </span>
           <input
             type="text"
             value={search}
             onChange={handleSearch}
-            className="w-full bg-card border border-border text-foreground text-[16px] rounded-2xl py-md pl-[52px] pr-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-            placeholder="Cari resep atau bahan makanan..."
+            disabled={isLoading}
+            className="w-full bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-800 text-black:text-grey placeholder:text-neutral-500 text-[16px] rounded-2xl py-md pl-[52px] pr-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:opacity-50"
+            placeholder={isLoading ? "Menghubungkan ke server gizi..." : "Cari resep atau bahan makanan..."}
           />
         </div>
       </section>
@@ -154,7 +184,7 @@ export default function DatabaseGiziPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-lg border-b border-border bg-card gap-md">
           <div className="flex items-center gap-sm text-[14px] font-medium text-muted-foreground bg-surface-alt px-md py-sm rounded-lg">
             <span className="material-symbols-outlined text-[20px]">list</span>
-            Menampilkan <span className="font-semibold text-primary">{filtered.length}</span> item
+            Menampilkan <span className="font-semibold text-primary">{isLoading ? "..." : filtered.length}</span> item
           </div>
           <div className="flex flex-wrap items-center gap-sm">
             <span className="text-[12px] font-medium tracking-wide text-muted-foreground flex items-center gap-xs">
@@ -163,8 +193,9 @@ export default function DatabaseGiziPage() {
             {SORT_OPTIONS.map((opt) => (
               <button
                 key={opt.key}
+                disabled={isLoading}
                 onClick={() => handleSort(opt.key)}
-                className={`border border-border rounded-full px-md py-sm text-[12px] font-medium tracking-wide transition-colors flex items-center gap-xs
+                className={`border border-border rounded-full px-md py-sm text-[12px] font-medium tracking-wide transition-colors flex items-center gap-xs disabled:opacity-50
                   ${sortKey === opt.key
                     ? "text-foreground bg-surface-alt"
                     : "text-muted-foreground hover:bg-surface"
@@ -192,7 +223,21 @@ export default function DatabaseGiziPage() {
               </tr>
             </thead>
             <tbody className="text-[14px] text-foreground divide-y divide-border/50">
-              {pageData.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="px-md py-xl text-center text-muted-foreground">
+                    <span className="material-symbols-outlined text-[24px] animate-spin mb-1 block">progress_activity</span>
+                    Sinkronisasi basis data nutrisi cloud...
+                  </td>
+                </tr>
+              ) : errorMessage ? (
+                <tr>
+                  <td colSpan={8} className="px-md py-xl text-center text-destructive font-medium">
+                    <span className="material-symbols-outlined text-[24px] mb-1 block">cloud_off</span>
+                    Gagal memuat data: {errorMessage}
+                  </td>
+                </tr>
+              ) : pageData.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-md py-sm text-center text-muted-foreground">
                     Tidak ada data yang sesuai.
@@ -218,6 +263,7 @@ export default function DatabaseGiziPage() {
           </table>
         </div>
 
+        {/* Panel Navigasi Halaman */}
         <div className="flex flex-col sm:flex-row justify-between items-center p-lg bg-card border-t border-border gap-md">
           <div className="text-[14px] font-medium text-muted-foreground">
             Halaman <span className="font-semibold text-foreground">{safePage}</span> dari {totalPages}
@@ -225,7 +271,7 @@ export default function DatabaseGiziPage() {
           <div className="flex gap-2">
             <button
               onClick={() => goPage(safePage - 1)}
-              disabled={safePage === 1}
+              disabled={safePage === 1 || isLoading}
               className="flex items-center justify-center w-10 h-10 border border-border rounded-xl text-muted-foreground hover:bg-surface transition-colors disabled:opacity-50 material-symbols-outlined"
             >
               chevron_left
@@ -238,6 +284,7 @@ export default function DatabaseGiziPage() {
               ) : (
                 <button
                   key={p}
+                  disabled={isLoading}
                   onClick={() => goPage(p)}
                   className={`flex items-center justify-center w-10 h-10 rounded-xl text-[14px] font-medium shadow-sm transition-colors tabular-nums
                     ${p === safePage
@@ -251,7 +298,7 @@ export default function DatabaseGiziPage() {
             )}
             <button
               onClick={() => goPage(safePage + 1)}
-              disabled={safePage === totalPages}
+              disabled={safePage === totalPages || isLoading}
               className="flex items-center justify-center w-10 h-10 border border-border rounded-xl text-muted-foreground hover:bg-surface transition-colors disabled:opacity-50 material-symbols-outlined"
             >
               chevron_right
@@ -260,7 +307,7 @@ export default function DatabaseGiziPage() {
         </div>
       </section>
 
-      <div className="flex items-center gap-sm p-md bg-surface-alt rounded-xl text-[12px] font-medium tracking-wide text-muted-foreground mt-lg border border-border/50 reveal reveal-delay-300">
+      <div className="flex items-center gap-sm p-md bg-surface-alt rounded-xl text-[12px] font-medium tracking-wide text-muted-foreground mt-lg border border-border/50 reveal">
         <span className="material-symbols-outlined text-[20px] text-primary">info</span>
         Informasi bersifat edukatif dan bukan pengganti konsultasi tenaga kesehatan. Lihat{" "}
         <Link className="underline font-semibold hover:text-primary transition-colors ml-1" to="/referensi">

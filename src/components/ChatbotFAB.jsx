@@ -1,4 +1,3 @@
-// src/components/ChatbotFAB.jsx
 import { useState, useRef, useEffect } from "react";
 
 const QUICK_REPLIES = [
@@ -26,43 +25,71 @@ export default function ChatbotFAB() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const getBotResponse = (text) => {
-    const q = text.toLowerCase();
-    if (q.includes("halo") || q.includes("hai") || q.includes("pagi") || q.includes("siang") || q.includes("malam"))
-      return "Halo! Ada informasi gizi atau resep sehat apa yang ingin Anda cari hari ini?";
-    if (q.includes("akg") || q.includes("kecukupan gizi"))
-      return "Angka Kecukupan Gizi (AKG) adalah rata-rata kecukupan zat gizi harian berdasarkan jenis kelamin, usia, dan aktivitas fisik. GiziMeal mengacu pada Permenkes No. 28 Tahun 2019.";
-    if (q.includes("kalori") || q.includes("kcal") || q.includes("energi") || q.includes("bmr"))
-      return "BMR adalah kalori minimum yang dibutuhkan tubuh saat istirahat. Rata-rata kebutuhan dewasa ~2000 kkal/hari. Gunakan fitur Kalkulator GiziMeal untuk menghitung kebutuhan spesifik Anda!";
-    if (q.includes("resep") || q.includes("masak") || q.includes("menu"))
-      return "Rekomendasi menu tersedia di fitur Deteksi Bahan — foto bahan makananmu, dan sistem akan merekomendasikan menu gizi seimbang beserta skor AKG-nya.";
-    if (q.includes("protein"))
-      return "Sumber protein baik antara lain: ayam, ikan, telur, tahu, tempe, dan kacang-kacangan. Kebutuhan protein dewasa sekitar 0.8–1.2g per kg berat badan per hari.";
-    if (q.includes("diet") || q.includes("turun") || q.includes("kurus"))
-      return "Untuk menurunkan berat badan, defisit kalori 500 kkal/hari dari TDEE Anda umumnya aman. Gunakan Kalkulator kami untuk mengetahui TDEE dan target kalori harian Anda.";
-    if (q.includes("terima kasih") || q.includes("makasih") || q.includes("thanks"))
-      return "Sama-sama! Selalu jaga pola makan seimbang ya. 🌿";
-    return "Pertanyaan bagus! Secara umum, ikuti Pedoman Gizi Seimbang Kemenkes RI: batasi gula, garam, dan minyak berlebih, serta konsumsi beragam sumber protein dan sayuran.";
-  };
-
-  const sendMessage = (text) => {
+  const sendMessage = async (text) => {
     if (!text.trim()) return;
-    const time = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-    setMessages((prev) => [...prev, { sender: "user", text, time }]);
+
+    const timeNow = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+
+    setMessages((prev) => [...prev, { sender: "user", text, time: timeNow }]);
     setInputVal("");
     setIsTyping(true);
     setShowQuick(false);
-    setTimeout(() => {
+
+    try {
+      const formattedHistory = [];
+      for (let i = 1; i < messages.length; i++) {
+        formattedHistory.push({
+          role: messages[i].sender === "user" ? "user" : "assistant",
+          content: messages[i].text
+        });
+      }
+
+      const response = await fetch("http://localhost:3000/api/chatbot/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: text,
+          history: formattedHistory 
+        }),
+      });
+
+      const jsonResult = await response.json();
+
+      if (!response.ok || !jsonResult.success) {
+        throw new Error(jsonResult.message || "Gagal mendapatkan balasan AI.");
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: jsonResult.reply,
+          time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+        }
+      ]);
+
+    } catch (err) {
+      console.error("Chatbot Fetching Error:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: "Maaf, koneksi saya ke server GiziMeal AI terputus. Mohon coba kirim pesan beberapa saat lagi. 🌿",
+          time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+        }
+      ]);
+    } finally {
       setIsTyping(false);
-      setMessages((prev) => [...prev, { sender: "bot", text: getBotResponse(text), time: new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) }]);
-    }, 850);
+    }
   };
 
   const handleSend = (e) => { e.preventDefault(); sendMessage(inputVal); };
 
   return (
     <>
-      {/* FAB */}
+      {/* FAB Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-lg right-lg w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-lg hover:shadow-xl z-40 transition-all duration-300 hover:scale-105 active:scale-95"
@@ -100,22 +127,21 @@ export default function ChatbotFAB() {
             </p>
           </div>
 
-          {/* Messages */}
+          {/* Messages Feed Area */}
           <div className="flex-grow overflow-y-auto p-md flex flex-col gap-sm bg-surface/50">
             {messages.map((msg, i) => (
               <div key={i} className={`flex flex-col max-w-[82%] ${msg.sender === "user" ? "self-end items-end" : "self-start items-start"}`}>
-                <div className={`px-sm py-xs rounded-2xl text-[13px] leading-relaxed shadow-sm ${
-                  msg.sender === "user"
+                <div className={`px-sm py-xs rounded-2xl text-[13px] leading-relaxed shadow-sm ${msg.sender === "user"
                     ? "bg-primary text-on-primary rounded-tr-none"
                     : "bg-surface-container text-on-surface rounded-tl-none border border-outline-variant/30"
-                }`}>
+                  }`}>
                   {msg.text}
                 </div>
                 <span className="text-[10px] text-on-surface-variant/60 mt-0.5 px-xs">{msg.time}</span>
               </div>
             ))}
 
-            {/* Typing */}
+            {/* Animasi Mengetik Bouncing */}
             {isTyping && (
               <div className="flex self-start">
                 <div className="px-sm py-xs rounded-2xl bg-surface-container rounded-tl-none border border-outline-variant/30 flex gap-1 items-center">
@@ -144,7 +170,7 @@ export default function ChatbotFAB() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
+          {/* Form Input Kirim */}
           <form onSubmit={handleSend} className="p-sm bg-surface-container-low border-t border-outline-variant flex gap-sm">
             <input
               type="text"
@@ -155,7 +181,7 @@ export default function ChatbotFAB() {
             />
             <button
               type="submit"
-              disabled={!inputVal.trim()}
+              disabled={!inputVal.trim() || isTyping}
               className="w-9 h-9 bg-primary text-on-primary disabled:opacity-40 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
               aria-label="Kirim"
             >

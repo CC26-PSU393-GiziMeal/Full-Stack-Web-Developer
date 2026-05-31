@@ -1,12 +1,13 @@
-// src/pages/Login.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import logoGiziMeal from "../assets/logo-dark-transparan.png";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", remember: false });
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const set = (key) => (e) =>
@@ -20,17 +21,45 @@ export default function LoginPage() {
     return errs;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
+
     setErrors({});
+    setServerError("");
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      localStorage.setItem("authToken", "demo-token");
+
+    try {
+      const response = await fetch("http://localhost:3000/api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Terjadi kesalahan saat login.");
+      }
+
+      const namaLengkap = `${data.user.user_metadata?.firstName || ""} ${data.user.user_metadata?.lastName || ""}`.trim();
+      localStorage.setItem("userName", namaLengkap || "Pengguna");
+      localStorage.setItem("userEmail", data.user.email);
+      localStorage.setItem("authToken", data.session.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
       navigate("/");
-    }, 1200);
+    } catch (err) {
+      setServerError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const inputBase =
@@ -44,21 +73,12 @@ export default function LoginPage() {
         className="hidden lg:flex lg:w-1/2 flex-col justify-between p-xxl relative overflow-hidden"
         style={{ background: "linear-gradient(160deg, #1b4332 0%, #2d6a4f 60%, #012d1d 100%)" }}
       >
-        {/* Background texture */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none z-0">
-          <img
-            src="https://lh3.googleusercontent.com/aida/ADBb0ui7QisIG3zTtjtaKohsnlZvFjYcBLYloWmvwz0zeXKMYaQIE0J1-2k4q9dY0krWV3fbAJxBYX92Q7anDIowZ3gf0YN1-2-2GhSpciAX_LLyBqp0b9nl3Ckn1Hr2MN6rql_RGvK2L74TvS_uo3PH25kzSKoH0HH4Fu0iIquzWiPFKk8COmAt1jZjTcpaQZIO0ZR51BdZG4i_jMmpg9d7rGDQHCvRBujtg7DGuYvS4M2rfTxD_efJNH3xk7U"
-            alt=""
-            className="w-full h-full object-cover"
-          />
-        </div>
         {/* Glow blob */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary opacity-20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none z-0" />
 
         {/* Logo */}
         <div className="flex items-center gap-sm relative z-10">
-          <span className="material-symbols-outlined text-tertiary-fixed text-[32px]" style={{ fontVariationSettings: '"FILL" 1' }}>eco</span>
-          <span className="text-[32px] font-bold text-white tracking-tight">GiziMeal</span>
+          <img src={logoGiziMeal} alt="Logo GiziMeal" className="w-32 h-auto" />
         </div>
 
         {/* Tagline */}
@@ -111,6 +131,11 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
+          {serverError && (
+            <div className="mb-md p-sm bg-error-container text-on-error-container rounded-lg text-[14px] font-medium border border-error">
+              {serverError}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="flex flex-col gap-lg" noValidate>
 
             {/* Email */}

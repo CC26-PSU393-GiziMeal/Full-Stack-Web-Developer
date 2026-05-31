@@ -1,3 +1,4 @@
+// src/App.jsx
 import { useState, useEffect } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
 import Navbar from "./components/Navbar";
@@ -34,10 +35,16 @@ function PlaceholderPage({ title }) {
 }
 
 function App() {
+  // DISKEMPURNAKAN: Mendukung deteksi otomatis tema default bawaan OS/Device user
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("theme");
-    return saved === "dark";
+    if (saved) {
+      return saved === "dark";
+    }
+    // Jika belum ada di localStorage, cek pengaturan browser/device
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
+
   const location = useLocation();
 
   useEffect(() => {
@@ -53,7 +60,6 @@ function App() {
   useEffect(() => {
     let observer;
 
-    // A small timeout to let the page render first
     const timer = setTimeout(() => {
       const elements = document.querySelectorAll(".reveal, .reveal-left, .reveal-right, .reveal-scale");
 
@@ -79,7 +85,7 @@ function App() {
         observer.disconnect();
       }
     };
-  }, [location.pathname]); // Run on every route change
+  }, [location.pathname]);
 
   const toggleDark = () => {
     setDarkMode((prev) => !prev);
@@ -89,14 +95,15 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-on-background">
+      {/* State dan handler diteruskan dengan aman ke komponen Navbar */}
       {!isAuthPage && <Navbar darkMode={darkMode} toggleDark={toggleDark} />}
 
       <div className={isAuthPage ? "" : "pt-[72px]"}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/deteksi" element={<DeteksiPage />} />
+          <Route path="/deteksi/hasil/:menu_name" element={<DetailResepPage />} />
           <Route path="/deteksi/hasil" element={<HasilDeteksiPage />} />
-          <Route path="/deteksi/resep/:id" element={<DetailResepPage />} />
           <Route path="/kalkulator" element={<KalkulatorPage />} />
           <Route path="/database" element={<DatabaseGiziPage />} />
           <Route path="/tentang" element={<TentangPage />} />

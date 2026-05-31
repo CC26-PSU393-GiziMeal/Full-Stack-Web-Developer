@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import heroImage from '../assets/hero.png';
 
 export default function HeroSection() {
+  const isLogged = !!localStorage.getItem("authToken");
+
   return (
     <section className="w-full bg-surface py-xl md:py-xxl transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-container-margin md:px-lg grid grid-cols-1 lg:grid-cols-12 gap-xl items-center">
@@ -20,11 +22,27 @@ export default function HeroSection() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-md">
-            <Link to="/auth/login" className="bg-primary text-primary-foreground px-lg py-md rounded-full text-[14px] font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-md">
-              <span className="material-symbols-outlined text-[18px]">login</span>
-              Masuk untuk Memulai
-            </Link>
+            {/* ── TOMBOL CTA UTAMA DINAMIS BERDASARKAN STATUS LOGIN ── */}
+            {isLogged ? (
+              <Link 
+                to="/deteksi" 
+                className="bg-primary text-primary-foreground px-lg py-md rounded-full text-[14px] font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-md animate-fade-in"
+              >
+                <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
+                Mulai Deteksi Bahan
+              </Link>
+            ) : (
+              <Link 
+                to="/auth/login" 
+                className="bg-primary text-primary-foreground px-lg py-md rounded-full text-[14px] font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-md"
+              >
+                <span className="material-symbols-outlined text-[18px]">login</span>
+                Masuk untuk Memulai
+              </Link>
+            )}
+
             <Link to="/referensi" className="bg-secondary text-secondary-foreground px-lg py-md rounded-full text-[14px] font-medium flex items-center justify-center gap-2 hover:bg-secondary/80 transition-all active:scale-95 border border-border">
+              <span className="material-symbols-outlined text-[18px]">menu_book</span>
               Lihat Sumber Referensi
             </Link>
           </div>
