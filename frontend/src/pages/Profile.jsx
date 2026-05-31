@@ -182,6 +182,7 @@ export default function ProfilePage() {
   const [calcData, setCalcData] = useState(null);
   const [biometrik, setBiometrik] = useState(null); 
   const [scanHistory, setScanHistory] = useState([]);
+  const [recipeHistory, setRecipeHistory] = useState([]);
   const [modal, setModal] = useState(null);
   const [loadingData, setLoadingData] = useState(true);
 
@@ -226,6 +227,16 @@ export default function ProfilePage() {
     };
 
     fetchBackendData();
+
+    // Load riwayat resep dari localStorage
+    try {
+      const historyRaw = localStorage.getItem("recipeHistory");
+      if (historyRaw) {
+        setRecipeHistory(JSON.parse(historyRaw));
+      }
+    } catch (e) {
+      console.error("Gagal memuat riwayat resep", e);
+    }
   }, [isLogged]);
 
   if (!isLogged) {
@@ -248,6 +259,11 @@ export default function ProfilePage() {
   const handleHapusAkun = () => {
     localStorage.clear();
     navigate("/");
+  };
+
+  const handleClearRecipeHistory = () => {
+    localStorage.removeItem("recipeHistory");
+    setRecipeHistory([]);
   };
 
   const quickAccess = [
@@ -444,6 +460,60 @@ export default function ProfilePage() {
                     </span>
                     <span className="material-symbols-outlined text-muted-foreground group-hover:text-secondary transition-colors text-[18px]">chevron_right</span>
                   </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* Riwayat Resep AI (dari localStorage) */}
+        <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
+          <div className="flex justify-between items-center">
+            <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
+              <span className="material-symbols-outlined text-[22px]">menu_book</span>
+              Riwayat Resep AI
+            </h2>
+            {recipeHistory.length > 0 && (
+              <button
+                onClick={handleClearRecipeHistory}
+                className="text-muted-foreground text-[12px] font-medium hover:text-destructive transition-colors flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-[14px]">delete_sweep</span>
+                Hapus semua
+              </button>
+            )}
+          </div>
+
+          {recipeHistory.length === 0 ? (
+            <div className="text-center py-lg border border-dashed border-border rounded-xl">
+              <div className="w-14 h-14 bg-surface-alt rounded-full flex items-center justify-center mx-auto mb-sm border border-border">
+                <span className="material-symbols-outlined text-[28px] text-muted-foreground">restaurant</span>
+              </div>
+              <p className="text-muted-foreground text-[14px]">Belum ada resep yang pernah di-generate.</p>
+              <p className="text-muted-foreground text-[12px] mt-xs">Coba deteksi bahan makanan lalu buka detail menu untuk generate resep.</p>
+            </div>
+          ) : (
+            <ul className="space-y-sm">
+              {recipeHistory.map((item) => (
+                <li
+                  key={item.id}
+                  onClick={() => {
+                    if (item.recipeState) {
+                      navigate("/deteksi/hasil/resep", { state: { recipe: item.recipeState } });
+                    } else {
+                      navigate("/database");
+                    }
+                  }}
+                  className="flex items-center gap-md bg-surface p-md rounded-xl border border-border hover:border-primary/50 transition-all group cursor-pointer shadow-sm hover:-translate-y-0.5"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="material-symbols-outlined text-primary text-[20px]">restaurant_menu</span>
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <p className="text-[15px] text-foreground font-medium truncate group-hover:text-primary transition-colors">{item.menu_name}</p>
+                    <p className="text-[12px] text-muted-foreground mt-0.5">{item.waktu}</p>
+                  </div>
+                  <span className="material-symbols-outlined text-muted-foreground group-hover:text-primary transition-colors text-[18px]">chevron_right</span>
                 </li>
               ))}
             </ul>

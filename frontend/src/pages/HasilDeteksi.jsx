@@ -198,7 +198,7 @@ export default function HasilDeteksiPage() {
                       />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-[13px] font-semibold text-foreground tabular-nums">
+                      <span className="text-[12px] font-semibold text-foreground tabular-nums">
                         {singlePred?.confidence_percent || `${confidenceValue.toFixed(0)}%`}
                       </span>
                     </div>

@@ -132,7 +132,8 @@ export default function LoginPage() {
 
           {/* Form */}
           {serverError && (
-            <div className="mb-md p-sm bg-error-container text-on-error-container rounded-lg text-[14px] font-medium border border-error">
+            <div className="mb-md p-sm bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 rounded-lg text-[14px] font-medium border border-red-300 dark:border-red-800 flex items-center gap-sm">
+              <span className="material-symbols-outlined text-[20px] text-red-500 flex-shrink-0">error</span>
               {serverError}
             </div>
           )}

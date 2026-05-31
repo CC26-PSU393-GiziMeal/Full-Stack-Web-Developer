@@ -147,15 +147,17 @@ export default function DatabaseGiziPage() {
 
       {/* ── Header Section ── */}
       <section className="text-center max-w-2xl mx-auto mb-xl reveal">
-        <button
-          onClick={() => navigate('/deteksi')}
-          className="inline-flex items-center gap-xs text-[14px] text-primary font-medium hover:opacity-80 transition-colors mb-md group"
-        >
-          <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">
-            arrow_back
-          </span>
-          Kembali ke Deteksi
-        </button>
+        <div className="text-left">
+          <button
+            onClick={() => navigate('/deteksi')}
+            className="inline-flex items-center gap-xs text-[14px] text-primary font-medium hover:opacity-80 transition-colors mb-md group"
+          >
+            <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">
+              arrow_back
+            </span>
+            Kembali ke Deteksi
+          </button>
+        </div>
 
         <h1 className="text-[28px] md:text-[36px] tracking-tight font-semibold text-primary mb-md leading-[1.05]">
           Data Makanan & Resep

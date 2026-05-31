@@ -74,6 +74,10 @@ export default function DetailResepPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [animated, setAnimated] = useState(false);
+  
+  const [aiRecipe, setAiRecipe] = useState(null);
+  const [isGeneratingRecipe, setIsGeneratingRecipe] = useState(false);
+  const [aiError, setAiError] = useState(null);
 
   const recipe = location.state?.recipe;
 
@@ -83,6 +87,62 @@ export default function DetailResepPage() {
       return;
     }
     const timer = setTimeout(() => setAnimated(true), 100);
+    
+    // Fetch AI Recipe
+    async function fetchAiRecipe() {
+      const menuName = recipe.menu_name;
+      const cacheKey = `gizimeal_recipe_${menuName}`;
+      
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          setAiRecipe(JSON.parse(cached));
+          return;
+        } catch (e) {
+          console.error("Cache parsing error", e);
+        }
+      }
+      
+      setIsGeneratingRecipe(true);
+      setAiError(null);
+      
+      try {
+        const response = await fetch(`${API_BASE}/api/recipe-details?menu_name=${encodeURIComponent(menuName)}`);
+        const result = await response.json();
+        
+        if (response.ok && result.success && result.data) {
+          setAiRecipe(result.data);
+          localStorage.setItem(cacheKey, JSON.stringify(result.data));
+
+          // Simpan riwayat resep ke localStorage (termasuk data recipe lengkap untuk navigasi langsung)
+          try {
+            const historyRaw = localStorage.getItem("recipeHistory");
+            let history = historyRaw ? JSON.parse(historyRaw) : [];
+            const newEntry = {
+              id: Date.now(),
+              menu_name: result.data.nama_masakan || menuName,
+              waktu: new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+              recipeState: recipe // simpan data recipe lengkap (nutrisi, skor, dll)
+            };
+            // hapus duplikat dengan nama yang sama, lalu tambahkan ke paling atas, batasi 20
+            history = [newEntry, ...history.filter(h => h.menu_name !== newEntry.menu_name)].slice(0, 20);
+            localStorage.setItem("recipeHistory", JSON.stringify(history));
+          } catch (e) {
+            console.error("Gagal menyimpan riwayat resep", e);
+          }
+        } else {
+          throw new Error(result.message || "Gagal mengambil resep dari AI");
+        }
+      } catch (err) {
+        console.error("Generate recipe error:", err);
+        setAiError(err.message);
+      } finally {
+        setIsGeneratingRecipe(false);
+      }
+    }
+    
+    fetchAiRecipe();
+
     return () => clearTimeout(timer);
   }, [recipe, navigate]);
 
@@ -187,14 +247,28 @@ export default function DetailResepPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-xl">
         <div className="lg:col-span-2 flex flex-col gap-xl">
-          {/* Bahan-bahan — kalau API lo return bahan, render di sini */}
-          {recipe.bahan && recipe.bahan.length > 0 && (
+          {/* Bahan-bahan */}
+          {isGeneratingRecipe ? (
+            <section className="bg-card rounded-xl border border-border p-lg reveal">
+              <h2 className="text-[16px] text-foreground flex items-center gap-sm mb-md pb-sm border-b border-border font-semibold tracking-tight">
+                <span className="material-symbols-outlined text-primary">assignment</span> BAHAN-BAHAN
+              </h2>
+              <div className="animate-pulse space-y-sm">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="flex gap-md py-sm">
+                    <div className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-neutral-700 flex-shrink-0" />
+                    <div className="h-5 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4" />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : aiRecipe?.bahan_bahan && aiRecipe.bahan_bahan.length > 0 ? (
             <section className="bg-card rounded-xl border border-border p-lg reveal">
               <h2 className="text-[16px] text-foreground flex items-center gap-sm mb-md pb-sm border-b border-border font-semibold tracking-tight">
                 <span className="material-symbols-outlined text-primary">assignment</span> BAHAN-BAHAN
               </h2>
               <ul className="space-y-sm text-[15px] leading-relaxed text-foreground">
-                {recipe.bahan.map((b, i) => (
+                {aiRecipe.bahan_bahan.map((b, i) => (
                   <li key={i} className="flex items-start gap-md py-sm border-b border-border/50 last:border-0 hover:bg-surface-alt/50 transition-colors">
                     <span className="material-symbols-outlined text-muted-foreground text-[18px] mt-[2px] flex-shrink-0">check_circle</span>
                     <div className="flex-grow flex justify-between gap-md">
@@ -205,16 +279,33 @@ export default function DetailResepPage() {
                 ))}
               </ul>
             </section>
-          )}
+          ) : null}
 
-          {/* Steps — kalau API lo return steps */}
-          {recipe.steps && recipe.steps.length > 0 && (
+          {/* Steps */}
+          {isGeneratingRecipe ? (
+            <section className="bg-card rounded-xl border border-border p-lg reveal reveal-delay-100">
+              <h2 className="text-[16px] text-foreground flex items-center gap-sm mb-md pb-sm border-b border-border font-semibold tracking-tight">
+                <span className="material-symbols-outlined text-primary">cooking</span> CARA MEMASAK
+              </h2>
+              <div className="animate-pulse space-y-md">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex gap-md bg-surface-alt/50 p-md rounded-lg">
+                    <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex-shrink-0" />
+                    <div className="flex flex-col gap-2 flex-grow pt-1">
+                      <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-full" />
+                      <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-5/6" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : aiRecipe?.cara_memasak && aiRecipe.cara_memasak.length > 0 ? (
             <section className="bg-card rounded-xl border border-border p-lg reveal reveal-delay-100">
               <h2 className="text-[16px] text-foreground flex items-center gap-sm mb-md pb-sm border-b border-border font-semibold tracking-tight">
                 <span className="material-symbols-outlined text-primary">cooking</span> CARA MEMASAK
               </h2>
               <div className="space-y-md">
-                {recipe.steps.map((step, i) => (
+                {aiRecipe.cara_memasak.map((step, i) => (
                   <div key={i} className="flex gap-md bg-surface-alt p-md rounded-lg border border-border hover:border-primary/30 transition-all duration-300">
                     <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary text-[14px] font-semibold flex items-center justify-center tabular-nums">
                       {i + 1}
@@ -224,14 +315,26 @@ export default function DetailResepPage() {
                 ))}
               </div>
             </section>
+          ) : null}
+          
+          {/* Catatan Gizi */}
+          {!isGeneratingRecipe && aiRecipe?.catatan_gizi && (
+             <section className="bg-primary/10 rounded-xl border border-primary/20 p-lg reveal">
+               <h2 className="text-[16px] text-primary flex items-center gap-sm mb-sm font-semibold tracking-tight">
+                 <span className="material-symbols-outlined">lightbulb</span> CATATAN GIZI
+               </h2>
+               <p className="text-[14px] text-foreground leading-relaxed">
+                 {aiRecipe.catatan_gizi}
+               </p>
+             </section>
           )}
 
-          {/* Fallback kalau API ga return bahan/steps */}
-          {(!recipe.bahan || recipe.bahan.length === 0) && (!recipe.steps || recipe.steps.length === 0) && (
+          {/* Fallback / Error */}
+          {!isGeneratingRecipe && (!aiRecipe?.bahan_bahan || aiRecipe.bahan_bahan.length === 0) && (!aiRecipe?.cara_memasak || aiRecipe.cara_memasak.length === 0) && (
             <section className="bg-card rounded-xl border border-border p-lg reveal">
               <div className="text-center py-xl text-muted-foreground flex flex-col items-center gap-sm">
-                <span className="material-symbols-outlined text-[32px]">info</span>
-                <p className="text-[14px]">Detail bahan dan cara memasak belum tersedia untuk menu ini.</p>
+                <span className="material-symbols-outlined text-[32px]">{aiError ? "error" : "info"}</span>
+                <p className="text-[14px]">{aiError ? `Gagal memuat resep: ${aiError}` : "Detail bahan dan cara memasak belum tersedia untuk menu ini."}</p>
               </div>
             </section>
           )}

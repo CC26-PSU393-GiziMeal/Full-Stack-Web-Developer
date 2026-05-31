@@ -81,3 +81,52 @@ export async function getRecipeImage(req, res) {
     });
   }
 }
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+export async function getRecipeDetails(req, res) {
+  const { menu_name } = req.query;
+
+  if (!menu_name) {
+    return res.status(400).json({ success: false, message: "Parameter menu_name wajib diisi" });
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+
+    const prompt = `
+      Berikan resep lengkap untuk masakan bernama: ${menu_name}.
+      Gunakan bahasa Indonesia yang ramah, mudah dipahami, dan berikan catatan gizi singkat.
+      Berikan respons DALAM FORMAT JSON SAJA dengan struktur persis seperti berikut tanpa ada field tambahan:
+      {
+        "nama_masakan": "${menu_name}",
+        "bahan_bahan": ["bahan 1 beserta jumlahnya", "bahan 2", "..."],
+        "cara_memasak": ["langkah 1", "langkah 2", "..."],
+        "catatan_gizi": "catatan gizi singkat di sini"
+      }
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Pembersihan markdown (sanitization)
+    const cleanedText = text.replace(/```json|```/gi, "").trim();
+    
+    const jsonResep = JSON.parse(cleanedText);
+    
+    return res.status(200).json({
+      success: true,
+      data: jsonResep
+    });
+  } catch (error) {
+    console.error("Gemini AI Error:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Gagal memproses resep dari AI",
+      error: error.message 
+    });
+  }
+}
+// Trigger nodemon restart to reload .env

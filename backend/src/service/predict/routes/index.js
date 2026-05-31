@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { predict, getRecipeImage } from "../controller/predict-controller.js";
+import { predict, getRecipeImage, getRecipeDetails } from "../controller/predict-controller.js";
 
 const router = express.Router();
 const upload = multer({
@@ -39,5 +39,6 @@ router.get("/classes", async (req, res) => {
 });
 
 router.get("/pexels/image", getRecipeImage);
+router.get("/recipe-details", getRecipeDetails);
 
 export default router;
