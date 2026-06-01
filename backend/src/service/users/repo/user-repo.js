@@ -111,6 +111,36 @@ class UserRepo {
     return data || [];
   }
 
+async saveRecipeHistory(userId, menuName, recipeData) {
+  const { data, error } = await supabase
+    .from('recipe_history')
+    .insert([
+      { 
+        user_id: userId, 
+        menu_name: menuName, 
+        recipe_data: recipeData // Mengamankan objek nutrisi utuh
+      }
+    ]);
+
+  if (error) {
+    throw new Error(`Supabase Insert Error: ${error.message}`);
+  }
+  return data;
+}
+
+async getRecipeHistory(userId) {
+  const { data, error } = await supabase
+    .from('recipe_history')
+    .select('id, menu_name, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(`Supabase Select Error: ${error.message}`);
+  }
+  return data;
+}
+
   async updatePassword(userId, passwordBaru) {
     const { data, error } = await supabase.auth.admin.updateUserById(
       userId,
