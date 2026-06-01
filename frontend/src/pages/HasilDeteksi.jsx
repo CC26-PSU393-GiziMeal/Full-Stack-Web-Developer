@@ -5,27 +5,11 @@ import { useState, useEffect } from "react";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
-const INGREDIENT_TRANSLATIONS = {
-  "apple": "Apel",
-  "banana": "Pisang",
-  "bean": "Kacang-kacangan",
-  "brinjal": "Terong",
-  "cabbage": "Kubis",
-  "carrot": "Wortel",
-  "cauliflower": "Kembang Kol",
-  "chicken": "Ayam",
-  "chilli": "Cabai",
-  "corn": "Jagung",
-  "cucumber": "Timun",
-  "egg": "Telur",
-  "ginger": "Jahe",
-  "onion": "Bawang",
-  "potato": "Kentang"
-};
-
 function translateIngredient(englishName) {
   if (!englishName) return "Bahan";
-  const trimmed = String(englishName).trim();
+  const trimmed = String(englishName).trim().toLowerCase();
+
+  // Fallback jika tidak ada di kamus, kapitalisasi huruf pertama
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 
@@ -133,18 +117,32 @@ export default function HasilDeteksiPage() {
   }, [rawResult, navigate]);
 
   const result = rawResult?.data ? rawResult.data : rawResult;
-  const singlePred = result?.prediction || null;
-  const predictions = result?.predictions || (singlePred ? [singlePred] : []);
+
+  const predictions = Array.isArray(result?.detected_ingredients)
+    ? result.detected_ingredients
+    : Array.isArray(result)
+      ? result
+      : Array.isArray(result?.prediction)
+        ? result.prediction
+        : Array.isArray(result?.predictions)
+          ? result.predictions
+          : result?.prediction
+            ? [result.prediction]
+            : [];
+
   const isSingle = predictions.length === 1;
+  const singlePred = isSingle ? predictions[0] : null;
   const menuRecommendations = result?.menu_recommendations || [];
 
   if (!rawResult) return null;
 
-  const confidenceValue = singlePred 
-    ? parseFloat(singlePred.confidence_percent || (singlePred.confidence_score ? singlePred.confidence_score * 100 : 0))
+  // Mendapatkan nilai akurasi item pertama
+  const confidenceValue = predictions.length > 0
+    ? parseFloat(predictions[0].confidence_percent || (predictions[0].confidence_score ? predictions[0].confidence_score * 100 : 0))
     : 0;
 
-  const isDetectionFailed = isSingle && confidenceValue < 60;
+  // Gambar dinyatakan gagal terdeteksi hanya jika array hasil ekstraksi kosong
+  const isDetectionFailed = predictions.length === 0;
 
   return (
     <main className="flex-grow w-full max-w-5xl mx-auto px-container-margin md:px-lg py-lg flex flex-col gap-lg">
@@ -157,18 +155,16 @@ export default function HasilDeteksiPage() {
         Kembali ke unggah
       </Link>
 
-      {/* Tampilan Kondisional jika deteksi total kosong atau akurasi di bawah 50% */}
-      {(!singlePred && predictions.length === 0) || isDetectionFailed ? (
+      {/* Tampilan Kondisional jika deteksi total kosong */}
+      {isDetectionFailed ? (
         <div className="bg-card border border-border rounded-xl p-xl text-center text-muted-foreground max-w-2xl mx-auto w-full shadow-sm my-md">
           <span className="material-symbols-outlined text-[48px] mb-sm text-destructive">image_not_supported</span>
           <h2 className="text-[18px] font-semibold text-foreground mb-xs">Gambar Tidak Terdeteksi</h2>
           <p className="text-[14px] text-muted-foreground leading-relaxed max-w-md mx-auto">
-            {isDetectionFailed 
-              ? `Tingkat keyakinan AI terlalu rendah (${confidenceValue.toFixed(1)}%). Pastikan foto objek bahan makanan terlihat jelas, mendapatkan pencahayaan yang cukup, dan tidak terpotong.`
-              : "Sistem tidak dapat mengidentifikasi adanya bahan makanan dari foto yang Anda unggah."}
+            Sistem tidak dapat mengidentifikasi adanya bahan makanan dari foto yang Anda unggah. Pastikan foto objek bahan makanan terlihat jelas, mendapatkan pencahayaan yang cukup, dan tidak terpotong.
           </p>
-          <Link 
-            to="/deteksi" 
+          <Link
+            to="/deteksi"
             className="mt-lg inline-flex items-center gap-xs bg-primary text-primary-foreground text-[14px] font-semibold px-md py-sm rounded-xl hover:opacity-90 transition-all shadow-sm"
           >
             <span className="material-symbols-outlined text-[18px]">photo_camera</span>
@@ -177,13 +173,13 @@ export default function HasilDeteksiPage() {
         </div>
       ) : (
         <>
-          {/* Tampilan Konten Utama Hasil Deteksi jika Lolos Batas Minimal 50% */}
+          {/* Tampilan Konten Utama Hasil Deteksi */}
           {isSingle ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-md items-center border-b border-border pb-md">
               <div className="lg:col-span-8 flex flex-col gap-xs">
                 <span className="text-[11px] text-muted-foreground tracking-[0.22em] uppercase font-semibold">Hasil Deteksi</span>
                 <h1 className="text-[24px] sm:text-[32px] md:text-[40px] font-semibold text-foreground tracking-tight leading-[1.05]">
-                  Bahan terdeteksi: <span className="text-primary">{translateIngredient(singlePred?.detected_item)}</span>
+                  Bahan terdeteksi: <span className="text-primary">{translateIngredient(singlePred?.detected_item || singlePred?.label)}</span>
                 </h1>
               </div>
               <div className="lg:col-span-4">
@@ -206,7 +202,7 @@ export default function HasilDeteksiPage() {
                   <div>
                     <span className="text-[11px] text-muted-foreground font-semibold uppercase tracking-[0.22em] block mb-1">Bahan</span>
                     <span className="text-[16px] font-semibold text-foreground leading-tight block">
-                      {translateIngredient(singlePred?.detected_item)}
+                      {translateIngredient(singlePred?.detected_item || singlePred?.label)}
                     </span>
                     <span className="text-[12px] text-muted-foreground block mt-0.5">{result.filename || "Kamera Pengguna"}</span>
                   </div>
@@ -222,22 +218,26 @@ export default function HasilDeteksiPage() {
                 </h1>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
-                {predictions.map((pred, i) => (
-                  <div key={i} className="bg-card border border-border rounded-xl p-sm flex items-center justify-between">
-                    <div className="flex items-center gap-sm">
-                      <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center font-semibold text-foreground text-[13px] tabular-nums">{i + 1}</div>
-                      <div>
-                        <span className="text-[15px] font-semibold text-foreground block leading-none">
-                          {translateIngredient(pred.detected_item)}
-                        </span>
-                        <span className="text-[12px] text-muted-foreground mt-1 block">{result.filename || "Gambar"}</span>
+                {predictions.map((namaBahanMentah, i) => {
+                  const detailPrediksiGambar = result?.per_image_predictions?.[i];
+                  return (
+                    <div key={i} className="bg-card border border-border rounded-xl p-sm flex items-center justify-between">
+                      <div className="flex items-center gap-sm">
+                        <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center font-semibold text-foreground text-[13px] tabular-nums">
+                          {i + 1}
+                        </div>
+                        <div>
+                          <span className="text-[15px] font-semibold text-foreground block leading-none capitalize">
+                            {translateIngredient(namaBahanMentah)}
+                          </span>
+                          <span className="text-[12px] text-muted-foreground mt-2 block">
+                            {detailPrediksiGambar?.filename || `Gambar ${i + 1}`}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <span className="text-[14px] text-secondary font-semibold tabular-nums">
-                      {pred.confidence_percent || "–"}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

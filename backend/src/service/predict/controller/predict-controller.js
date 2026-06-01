@@ -4,51 +4,77 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function predict(req, res) {
   try {
-    if (!req.file) {
+    // 1. Validasi File Masuk
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
         message: "File gambar wajib diupload",
       });
     }
 
+    // 2. Validasi Ukuran File (Maksimal 1MB)
     const MAX_FILE_SIZE = 1 * 1024 * 1024;
-    if (req.file.size > MAX_FILE_SIZE) {
-      return res.status(400).json({
-        success: false,
-        message: "Ukuran gambar terlalu besar. Maksimal ukuran file adalah 1MB.",
-      });
+    for (const file of req.files) {
+      if (file.size > MAX_FILE_SIZE) {
+        return res.status(400).json({
+          success: false,
+          message: `Ukuran gambar ${file.originalname} terlalu besar. Maksimal 1MB.`,
+        });
+      }
     }
 
-    // 1. Dapatkan data hasil analisis gambar dari AI Hugging Face
-    const result = await PredictRepo.predictImage(req.file);
-
-    // 2. LOGIKA PENYAMBUNGAN RIWAYAT: Jika ada userId dikirim dari frontend, catat ke database
-    const { userId } = req.body; 
-    if (userId && result && result.prediction) {
-      const namaBahan = result.prediction.detected_item || "Bahan Makanan";
-      
-      // Bersihkan teks persentase ("89.72%") menjadi angka bulat murni (89)
-      const skorAkurasi = Math.round(
-        parseFloat(result.prediction.confidence_percent || result.prediction.confidence_score * 100 || 0)
-      );
-
-      // Jalankan fungsi simpan riwayat di background secara asinkronus
-      await UserRepo.saveScanHistory(userId, {
-        bahan: namaBahan,
-        skor: skorAkurasi
-      });
+    // 3. Ambil data dari Hugging Face melalui Repo
+    const result = await PredictRepo.predictImage(req.files);
+    
+    if (!result) {
+      throw new Error("Hugging Face API tidak mengembalikan respon data apa pun.");
     }
 
+    // 4. Logika Penyambungan Riwayat ke Database (Background Task menggunakan setTimeout)
+    const userId = req.headers["x-user-id"] || req.body.userId; 
+    if (userId) {
+      setTimeout(async () => {
+        try {
+          // Ambil array prediksi secara dinamis dan aman
+          const predictionsData = Array.isArray(result) 
+            ? result 
+            : (result.predictions || result.prediction || []);
+
+          if (Array.isArray(predictionsData)) {
+            for (const item of predictionsData) {
+              if (!item) continue;
+              const namaBahan = item.detected_item || item.label || "Bahan Makanan";
+              const skorAkurasi = Math.round(
+                parseFloat(item.confidence_percent || (item.confidence_score * 100) || 0)
+              );
+              await UserRepo.saveScanHistory(userId, { bahan: namaBahan, skor: skorAkurasi });
+            }
+          } else if (typeof predictionsData === "object" && predictionsData !== null) {
+            const namaBahan = predictionsData.detected_item || predictionsData.label || "Bahan Makanan";
+            const skorAkurasi = Math.round(
+              parseFloat(predictionsData.confidence_percent || (predictionsData.confidence_score * 100) || 0)
+            );
+            await UserRepo.saveScanHistory(userId, { bahan: namaBahan, skor: skorAkurasi });
+          }
+        } catch (dbError) {
+          console.error("⚠️ Background DB Error:", dbError.message);
+        }
+      }, 0);
+    }
+
+    // 5. Kirim langsung data respon murni ke frontend tanpa restrukturisasi yang merusak
     return res.status(200).json({
       success: true,
       data: result,
     });
 
   } catch (error) {
-    console.error("Predict controller error:", error);
+    // CETAK EROR UTAMA DI TERMINAL BACKEND UNTUK PEMANTAUAN UTAMA KAMU
+    console.error("❌ CRITICAL ERROR DI CONTROLLER:", error);
+    
     return res.status(500).json({
       success: false,
-      message: "Terjadi kesalahan saat prediksi",
+      message: "Terjadi kesalahan saat memproses prediksi di server",
       error: error.message,
     });
   }

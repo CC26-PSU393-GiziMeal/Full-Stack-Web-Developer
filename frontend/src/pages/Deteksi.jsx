@@ -26,9 +26,7 @@ export default function DeteksiPage() {
         }
         
         const data = await response.json();
-        
         const classesArray = Array.isArray(data) ? data : (data.classes || data.data || []);
-        
         setSupportedIngredients(classesArray);
       } catch (err) {
         console.error("Gagal mengambil rute classes:", err);
@@ -61,68 +59,103 @@ export default function DeteksiPage() {
     );
   }
 
-  const MAX_IMAGES = 1;
+  const MAX_IMAGES = 15;
 
+  // 1. Fungsi Utama Validasi & Append File ke State
   const addFiles = (files) => {
     const valid = Array.from(files)
       .filter((f) => f.type.startsWith("image/"))
       .slice(0, MAX_IMAGES - images.length);
+      
     const previews = valid.map((file) => ({
       id: crypto.randomUUID(),
       url: URL.createObjectURL(file),
       name: file.name,
       rawFile: file
     }));
+    
     if (previews.length > 0) {
       setImages((prev) => [...prev, ...previews]);
     }
   };
 
-  const removeImage = (id) => setImages((prev) => prev.filter((img) => img.id !== id));
-  const handleDrop = (e) => { e.preventDefault(); setIsDragging(false); addFiles(e.dataTransfer.files); };
+  // 2. Handler jika input dilempar lewat klik explorer
   const handleFileInput = (e) => {
-    addFiles(e.target.files);
-    e.target.value = "";
+    if (e.target.files && e.target.files.length > 0) {
+      addFiles(e.target.files);
+    }
   };
 
+  // 3. Handler JELAS DAN AMAN untuk Drag & Drop Gambar
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (!isAnalyzing && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      addFiles(e.dataTransfer.files);
+    }
+  };
+
+  // 4. Handler Hapus Preview Gambar
+  const removeImage = (id) => {
+    setImages((prev) => {
+      const target = prev.find((img) => img.id === id);
+      if (target) URL.revokeObjectURL(target.url); // Cegah memory leak di browser
+      return prev.filter((img) => img.id !== id);
+    });
+  };
+
+  // 5. Handler Kirim Data Multi-Image ke Server API
   const handleMulaiDeteksi = async () => {
     if (images.length === 0) return;
 
     setIsAnalyzing(true);
     Swal.fire({
       title: "Menganalisis Foto...",
-      text: "GiziMeal AI sedang mengidentifikasi bahan makanan dan menyusun menu ideal.",
+      text: "GiziMeal AI sedang mengidentifikasi semua bahan makanan dari foto-foto Anda.",
       allowOutsideClick: false,
       didOpen: () => { Swal.showLoading(); }
     });
 
     try {
       const formData = new FormData();
-      formData.append("file", images[0].rawFile); 
+      
+      // Append semua file biner mentah ke key "files"
+      images.forEach((img) => {
+        formData.append("files", img.rawFile);
+      });
 
-      // ── KUNCI DI SISI FRONTEND: Ambil ID user dari localStorage dan selipkan ke body ──
+      // AMBIL USER ID UNTUK DIKIRIM VIA HEADERS (Lebih aman untuk Multipart FormData)
+      let currentUserId = null;
       const userRaw = localStorage.getItem("user");
       if (userRaw) {
-        const userId = JSON.parse(userRaw).id;
-        formData.append("userId", userId); // Menyisipkan userId ke form-data request
+        currentUserId = JSON.parse(userRaw).id;
       }
 
       const response = await fetch("http://localhost:3000/api/predict", {
         method: "POST",
-        body: formData, // Browser otomatis menyusun boundary multipart/form-data
+        headers: {
+          // Kirim userId lewat header kustom agar tidak mengganggu biner gambar
+          ...(currentUserId && { "X-User-Id": String(currentUserId) })
+        },
+        body: formData, 
       });
 
       const jsonResult = await response.json();
 
+      // Cek status HTTP request
       if (!response.ok || !jsonResult.success) {
         throw new Error(jsonResult.message || "Gagal melakukan deteksi citra.");
       }
 
       Swal.close();
+      
+      // Navigasi ke halaman hasil dengan membawa payload data bersih
       navigate("/deteksi/hasil", { state: { result: jsonResult.data } });
 
     } catch (err) {
-      console.error("Deteksi Alur Error:", err);
+      console.error("Deteksi Alur Error di Frontend:", err);
       Swal.fire({
         icon: "error",
         title: "Deteksi Gagal",
@@ -191,7 +224,7 @@ export default function DeteksiPage() {
           <p className="text-[12px] font-medium tracking-wide text-muted-foreground/60 mt-sm">
             Mendukung JPG, PNG, WEBP. Maks 1MB per file.
           </p>
-          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileInput} onClick={(e) => e.stopPropagation()} />
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handleFileInput} onClick={(e) => e.stopPropagation()} />
         </div>
 
         {/* Preview Grid */}
@@ -254,7 +287,7 @@ export default function DeteksiPage() {
           </ul>
         </div>
 
-        {/* ── SEKSI TERINTEGRASI: BAHAN DIDUKUNG DARI API ── */}
+        {/* Bahan Didukung */}
         <div className="bg-card rounded-2xl p-lg border border-border shadow-sm">
           <div className="flex items-center gap-sm mb-lg pb-sm border-b border-border">
             <span className="material-symbols-outlined text-foreground">format_list_bulleted</span>

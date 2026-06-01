@@ -1,4 +1,5 @@
 import axios from "axios";
+// Import library form-data eksternal agar aman di semua versi Node.js
 import FormData from "form-data";
 
 const HF_API = "https://cc26-psu393-gizimeal-api.hf.space/predict";
@@ -6,83 +7,52 @@ const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
 const PEXELS_API = "https://api.pexels.com/v1/search";
 
 class PredictRepo {
-  async predictImage(file) {
+  async predictImage(files) {
     try {
       const formData = new FormData();
 
-      formData.append(
-        "files",
-        file.buffer,
-        file.originalname
-      );
+      // Memasukkan buffer biner langsung ke Form-Data (Sangat aman untuk Node.js lama & baru)
+      files.forEach((file) => {
+        formData.append("files", file.buffer, {
+          filename: file.originalname,
+          contentType: file.mimetype,
+        });
+      });
 
-      const response = await axios.post(
-        HF_API,
-        formData,
-        {
-          headers: {
-            ...formData.getHeaders(),
-          },
+      // Lakukan request ke Hugging Face
+      const response = await axios.post(HF_API, formData, {
+        headers: {
+          // Ambil boundary headers resmi dari library form-data eksternal
+          ...formData.getHeaders(),
         }
-      );
+      });
 
-      console.log("HF SUCCESS:", response.data);
-
+      // PASTIKAN HANYA MENGEMBALIKAN response.data (berbentuk JSON murni)
+      console.log("HF MULTI-IMAGE SUCCESS IN REPO:", response.data);
       return response.data;
 
     } catch (error) {
-
-      console.error("HF ERROR FULL:");
-
+      console.error("HF ERROR FULL IN REPO:");
       if (error.response) {
-        console.error(error.response.status);
-
-        console.dir(
-          error.response.data,
-          { depth: null }
-        );
+        console.error("Status:", error.response.status);
+        console.dir(error.response.data, { depth: null });
+        throw new Error(JSON.stringify(error.response.data));
       } else {
         console.error(error.message);
+        throw new Error(error.message);
       }
-
-      throw new Error(
-        JSON.stringify(
-          error.response?.data || error.message
-        )
-      );
     }
   }
 
   async searchImage(query) {
-    try {
-      if (!PEXELS_API_KEY) {
-        throw new Error("PEXELS_API_KEY belum diset di .env");
-      }
- 
-      const response = await axios.get(PEXELS_API, {
-        headers: {
-          Authorization: PEXELS_API_KEY,
-        },
-        params: {
-          query,
-          per_page: 1,
-          orientation: "landscape",
-        },
-      });
- 
-      const photos = response.data.photos;
- 
-      if (!photos || photos.length === 0) {
-        return null;
-      }
- 
-      return photos[0].src.large2x;
- 
-    } catch (error) {
-      console.error("Pexels error:", error.message);
-      throw new Error(error.response?.data?.error || error.message);
-    }
+    if (!PEXELS_API_KEY) throw new Error("PEXELS_API_KEY belum diset di .env");
+    const response = await axios.get(PEXELS_API, {
+      headers: { Authorization: PEXELS_API_KEY },
+      params: { query, per_page: 1, orientation: "landscape" },
+    });
+    const photos = response.data.photos;
+    return photos && photos.length > 0 ? photos[0].src.large2x : null;
   }
 }
 
-export default new PredictRepo()
+export default new PredictRepo();

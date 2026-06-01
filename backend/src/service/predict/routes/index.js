@@ -12,12 +12,13 @@ const upload = multer({
 });
 
 router.post("/predict", (req, res, next) => {
-  upload.single("file")(req, res, (err) => {
+  // Ambil field "files" dengan limit maksimal 5 file gambar
+  upload.array("files", 5)(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       if (err.code === "LIMIT_FILE_SIZE") {
         return res.status(400).json({
           success: false,
-          message: "Ukuran gambar terlalu besar. Maksimal ukuran file adalah 5MB.",
+          message: "Ukuran salah satu gambar terlalu besar. Maksimal ukuran file adalah 1MB.",
         });
       }
       return res.status(400).json({ success: false, message: err.message });
