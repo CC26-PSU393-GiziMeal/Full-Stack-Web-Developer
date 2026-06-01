@@ -36,7 +36,7 @@ function ModalGantiPassword({ onClose }) {
     if (!form.lama || !form.baru || !form.konfirmasi) { setError("Semua field wajib diisi."); return; }
     if (form.baru.length < 8) { setError("Password baru minimal 8 karakter."); return; }
     if (form.baru !== form.konfirmasi) { setError("Konfirmasi password tidak cocok."); return; }
-    
+
     setError("");
     setLoading(true);
 
@@ -115,8 +115,8 @@ function ModalGantiPassword({ onClose }) {
               </div>
             ))}
             {error && <p className="text-[13px] text-destructive font-medium">{error}</p>}
-            <button 
-              onClick={submit} 
+            <button
+              onClick={submit}
               disabled={loading}
               className="w-full bg-primary text-primary-foreground font-semibold py-md rounded-xl hover:opacity-90 transition-all active:scale-[0.98] mt-sm flex items-center justify-center gap-xs disabled:opacity-60 disabled:cursor-not-allowed"
             >
@@ -180,11 +180,12 @@ export default function ProfilePage() {
 
   const [userProfile, setUserProfile] = useState({ name: "Pengguna", email: "", username: "" });
   const [calcData, setCalcData] = useState(null);
-  const [biometrik, setBiometrik] = useState(null); 
+  const [biometrik, setBiometrik] = useState(null);
   const [scanHistory, setScanHistory] = useState([]);
   const [recipeHistory, setRecipeHistory] = useState([]);
   const [modal, setModal] = useState(null);
   const [loadingData, setLoadingData] = useState(true);
+  const [loadingRecipeHistory, setLoadingRecipeHistory] = useState(true);
 
   useEffect(() => {
     if (!isLogged) return;
@@ -216,7 +217,7 @@ export default function ProfilePage() {
 
         if (response.ok) {
           setCalcData(data.calcData);
-          setBiometrik(data.biometrikData); 
+          setBiometrik(data.biometrikData);
           setScanHistory(data.scanHistory || []);
         }
       } catch (err) {
@@ -226,17 +227,29 @@ export default function ProfilePage() {
       }
     };
 
-    fetchBackendData();
+    const fetchRecipeHistoryFromSupabase = async () => {
+      try {
+        setLoadingRecipeHistory(true);
+        const userRaw = localStorage.getItem("user");
+        if (!userRaw) return;
+        const userId = JSON.parse(userRaw).id;
 
-    // Load riwayat resep dari localStorage
-    try {
-      const historyRaw = localStorage.getItem("recipeHistory");
-      if (historyRaw) {
-        setRecipeHistory(JSON.parse(historyRaw));
+        // Ambil riwayat resep langsung dari database Supabase melalui API Backend
+        const response = await fetch(`http://localhost:3000/api/recipe-history/${userId}`);
+        const json = await response.json();
+
+        if (response.ok && json.success) {
+          setRecipeHistory(json.data);
+        }
+      } catch (err) {
+        console.error("Gagal memuat riwayat resep dari Supabase:", err);
+      } finally {
+        setLoadingRecipeHistory(false);
       }
-    } catch (e) {
-      console.error("Gagal memuat riwayat resep", e);
-    }
+    };
+
+    fetchBackendData();
+    fetchRecipeHistoryFromSupabase();
   }, [isLogged]);
 
   if (!isLogged) {
@@ -261,11 +274,6 @@ export default function ProfilePage() {
     navigate("/");
   };
 
-  const handleClearRecipeHistory = () => {
-    localStorage.removeItem("recipeHistory");
-    setRecipeHistory([]);
-  };
-
   const quickAccess = [
     { icon: "calculate", label: "Kalkulator AKG", desc: "Hitung kebutuhan kalori harianmu", to: "/kalkulator" },
     { icon: "troubleshoot", label: "Deteksi Bahan", desc: "Scan bahan makanan & dapatkan rekomendasi", to: "/deteksi" },
@@ -279,25 +287,25 @@ export default function ProfilePage() {
   ];
 
   const biometrikItems = [
-    { 
-      label: "Jenis Kelamin", 
-      value: biometrik ? (biometrik.gender === 'pria' ? 'Laki-laki' : 'Perempuan') : "–", 
-      icon: "wc" 
+    {
+      label: "Jenis Kelamin",
+      value: biometrik ? (biometrik.gender === 'pria' ? 'Laki-laki' : 'Perempuan') : "–",
+      icon: "wc"
     },
-    { 
-      label: "Usia Pengguna", 
-      value: biometrik ? `${biometrik.usia} Tahun` : "–", 
-      icon: "cake" 
+    {
+      label: "Usia Pengguna",
+      value: biometrik ? `${biometrik.usia} Tahun` : "–",
+      icon: "cake"
     },
-    { 
-      label: "Berat Badan", 
-      value: biometrik ? `${biometrik.berat} kg` : "–", 
-      icon: "weight" 
+    {
+      label: "Berat Badan",
+      value: biometrik ? `${biometrik.berat} kg` : "–",
+      icon: "weight"
     },
-    { 
-      label: "Tinggi Badan", 
-      value: biometrik ? `${biometrik.tinggi} cm` : "–", 
-      icon: "straighten" 
+    {
+      label: "Tinggi Badan",
+      value: biometrik ? `${biometrik.tinggi} cm` : "–",
+      icon: "straighten"
     },
   ];
 
@@ -328,7 +336,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* SECTION 1: Informasi Akun (Nama, Email, Username) tetap aman di sini */}
+        {/* SECTION 1: Informasi Akun */}
         <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
           <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
             <span className="material-symbols-outlined text-[22px]">person</span>
@@ -347,7 +355,7 @@ export default function ProfilePage() {
           </ul>
         </section>
 
-        {/* SECTION 2: Informasi Fisik & Biometrik (Usia, Berat, Tinggi) berjejer rapi di bawahnya */}
+        {/* SECTION 2: Informasi Fisik & Biometrik */}
         <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
           <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
             <span className="material-symbols-outlined text-[22px]">accessibility_new</span>
@@ -366,7 +374,7 @@ export default function ProfilePage() {
           </ul>
         </section>
 
-        {/* Data Target Nutrisi Harian (Tabel kalkulator_results) */}
+        {/* Target Kebutuhan Nutrisi Harian */}
         <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
           <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
             <span className="material-symbols-outlined text-[22px]">monitor_weight</span>
@@ -436,16 +444,16 @@ export default function ProfilePage() {
               Scan baru <span className="material-symbols-outlined text-[16px]">add</span>
             </button>
           </div>
-          
+
           {loadingData ? (
             <p className="text-center py-sm text-muted-foreground">Memuat riwayat...</p>
           ) : scanHistory.length === 0 ? (
             <div className="text-center py-lg border border-dashed border-border rounded-xl">
-               <p className="text-muted-foreground text-[14px]">Belum ada riwayat hasil deteksi makanan.</p>
+              <p className="text-muted-foreground text-[14px]">Belum ada riwayat hasil deteksi makanan.</p>
             </div>
           ) : (
             <ul className="space-y-sm">
-              {scanHistory.map((item) => (
+              {scanHistory.slice(0, 5).map((item) => (
                 <li key={item.id} className="flex items-center gap-md bg-surface p-md rounded-xl border border-border hover:border-secondary transition-colors group cursor-pointer shadow-sm">
                   <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
                     <span className="material-symbols-outlined text-secondary text-[20px]">document_scanner</span>
@@ -466,57 +474,69 @@ export default function ProfilePage() {
           )}
         </section>
 
-        {/* Riwayat Resep AI (dari localStorage) */}
+        {/* ========================================================== */}
+        {/* SEKSI RIWAYAT RESEP AI (TERINTEGRASI SUPABASE BACKEND)     */}
+        {/* ========================================================== */}
         <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
           <div className="flex justify-between items-center">
             <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
               <span className="material-symbols-outlined text-[22px]">menu_book</span>
               Riwayat Resep AI
             </h2>
-            {recipeHistory.length > 0 && (
-              <button
-                onClick={handleClearRecipeHistory}
-                className="text-muted-foreground text-[12px] font-medium hover:text-destructive transition-colors flex items-center gap-xs"
-              >
-                <span className="material-symbols-outlined text-[14px]">delete_sweep</span>
-                Hapus semua
-              </button>
-            )}
           </div>
 
-          {recipeHistory.length === 0 ? (
+          {loadingRecipeHistory ? (
+            <p className="text-center py-md text-muted-foreground text-[14px]">Mengambil data resep dari database...</p>
+          ) : recipeHistory.length === 0 ? (
             <div className="text-center py-lg border border-dashed border-border rounded-xl">
               <div className="w-14 h-14 bg-surface-alt rounded-full flex items-center justify-center mx-auto mb-sm border border-border">
                 <span className="material-symbols-outlined text-[28px] text-muted-foreground">restaurant</span>
               </div>
-              <p className="text-muted-foreground text-[14px]">Belum ada resep yang pernah di-generate.</p>
-              <p className="text-muted-foreground text-[12px] mt-xs">Coba deteksi bahan makanan lalu buka detail menu untuk generate resep.</p>
+              <p className="text-muted-foreground text-[14px]">Belum ada riwayat resep yang tersimpan.</p>
+              <p className="text-muted-foreground text-[12px] mt-xs">Coba deteksi bahan makanan lalu buka detail menu untuk menyimpan resep.</p>
             </div>
           ) : (
-            <ul className="space-y-sm">
-              {recipeHistory.map((item) => (
-                <li
-                  key={item.id}
-                  onClick={() => {
-                    if (item.recipeState) {
-                      navigate("/deteksi/hasil/resep", { state: { recipe: item.recipeState } });
-                    } else {
-                      navigate("/database");
-                    }
-                  }}
-                  className="flex items-center gap-md bg-surface p-md rounded-xl border border-border hover:border-primary/50 transition-all group cursor-pointer shadow-sm hover:-translate-y-0.5"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-primary text-[20px]">restaurant_menu</span>
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <p className="text-[15px] text-foreground font-medium truncate group-hover:text-primary transition-colors">{item.menu_name}</p>
-                    <p className="text-[12px] text-muted-foreground mt-0.5">{item.waktu}</p>
-                  </div>
-                  <span className="material-symbols-outlined text-muted-foreground group-hover:text-primary transition-colors text-[18px]">chevron_right</span>
-                </li>
-              ))}
-            </ul>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-[13px]">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground font-semibold">
+                    <th className="pb-sm font-semibold text-[14px]">Nama Menu</th>
+                    <th className="pb-sm font-semibold text-right text-[14px]">Waktu Dilihat</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50 text-foreground">
+                  {recipeHistory.slice(0, 5).map((item) => (
+                    <tr
+                      key={item.id}
+                      onClick={() => {
+                        navigate("/deteksi/hasil/resep", {
+                          state: {
+                            recipe: item.recipe_data
+                          }
+                        });
+                      }}
+                      className="hover:bg-surface-alt/50 transition-all group cursor-pointer"
+                    >
+                      <td className="py-md font-medium text-foreground group-hover:text-primary transition-colors text-[14px]">
+                        <div className="flex items-center gap-sm">
+                          <span className="material-symbols-outlined text-primary text-[18px]">restaurant_menu</span>
+                          {item.menu_name}
+                        </div>
+                      </td>
+                      <td className="py-md text-right text-muted-foreground tabular-nums text-[13px]">
+                        {new Date(item.created_at).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
 
@@ -532,7 +552,7 @@ export default function ProfilePage() {
                 <button onClick={() => navigate(item.to)}
                   className="w-full flex items-center gap-md bg-card p-md rounded-xl border border-border hover:border-secondary hover:-translate-y-0.5 shadow-sm cursor-pointer group text-left transition-all">
                   <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-secondary text-[20px]">{item.icon}</span>
+                    <span className="material-symbols-outlined text-secondary text-[20px]"> {item.icon}</span>
                   </div>
                   <div className="flex-grow">
                     <p className="text-[15px] text-foreground font-semibold group-hover:text-secondary transition-colors">{item.label}</p>

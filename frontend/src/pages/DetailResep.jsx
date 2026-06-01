@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable no-unused-vars */
 import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // Tambahkan useRef di sini
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -74,12 +74,15 @@ export default function DetailResepPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [animated, setAnimated] = useState(false);
-  
+
   const [aiRecipe, setAiRecipe] = useState(null);
   const [isGeneratingRecipe, setIsGeneratingRecipe] = useState(false);
   const [aiError, setAiError] = useState(null);
 
   const recipe = location.state?.recipe;
+
+  // Membuat reference kunci pembatas render ganda React Strict Mode
+  const hasSaved = useRef(false);
 
   useEffect(() => {
     if (!recipe) {
@@ -87,12 +90,61 @@ export default function DetailResepPage() {
       return;
     }
     const timer = setTimeout(() => setAnimated(true), 100);
-    
-    // Fetch AI Recipe
+    const menuName = recipe.menu_name;
+
+    // =================================================================
+    // FUNGSI BARU: LANGSUNG SIMPAN KE SUPABASE BEGITU HALAMAN DIBUKA
+    // =================================================================
+    async function saveToHistoryDirectly() {
+      // JIKA sudah pernah terkunci/tersimpan dalam siklus render ini, batalkan request kedua
+      if (hasSaved.current) return;
+
+      const userRaw = localStorage.getItem("user");
+      if (!userRaw) return;
+
+      try {
+        const parsedUser = JSON.parse(userRaw);
+        const userId = parsedUser.id;
+
+        // JIKA userId tidak valid, batalkan request agar tidak memicu error 404/400
+        if (!userId || userId === "null" || userId === "undefined") {
+          console.warn("userId tidak valid, proses simpan dibatalkan.");
+          return;
+        }
+
+        // Kunci benderanya secara instan sebelum melakukan fetch
+        hasSaved.current = true;
+
+        // Tembak endpoint POST ke backend untuk langsung catat ke Supabase
+        const resHistory = await fetch(`${API_BASE}/api/recipe-history`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: userId,
+            menuName: menuName,
+            recipeData: recipe
+          }),
+        });
+
+        if (resHistory.ok) {
+          console.log(`[Supabase] Riwayat untuk ${menuName} sukses tersimpan.`);
+        } else {
+          console.error(`[Backend Error] Status: ${resHistory.status}`);
+          // Jika server gagal memproses, buka kembali kuncinya agar bisa dicoba ulang saat refresh
+          hasSaved.current = false;
+        }
+      } catch (err) {
+        console.error("Gagal menyimpan riwayat instan:", err);
+        hasSaved.current = false;
+      }
+    }
+
+    // Fetch AI Recipe (Tugas mengambil teks dari Gemini)
     async function fetchAiRecipe() {
-      const menuName = recipe.menu_name;
       const cacheKey = `gizimeal_recipe_${menuName}`;
-      
+
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         try {
@@ -102,19 +154,19 @@ export default function DetailResepPage() {
           console.error("Cache parsing error", e);
         }
       }
-      
+
       setIsGeneratingRecipe(true);
       setAiError(null);
-      
+
       try {
         const response = await fetch(`${API_BASE}/api/recipe-details?menu_name=${encodeURIComponent(menuName)}`);
         const result = await response.json();
-        
+
         if (response.ok && result.success && result.data) {
           setAiRecipe(result.data);
           localStorage.setItem(cacheKey, JSON.stringify(result.data));
 
-          // Simpan riwayat resep ke localStorage (termasuk data recipe lengkap untuk navigasi langsung)
+          // Simpan riwayat cadangan ke localStorage
           try {
             const historyRaw = localStorage.getItem("recipeHistory");
             let history = historyRaw ? JSON.parse(historyRaw) : [];
@@ -122,13 +174,12 @@ export default function DetailResepPage() {
               id: Date.now(),
               menu_name: result.data.nama_masakan || menuName,
               waktu: new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-              recipeState: recipe // simpan data recipe lengkap (nutrisi, skor, dll)
+              recipeState: recipe
             };
-            // hapus duplikat dengan nama yang sama, lalu tambahkan ke paling atas, batasi 20
             history = [newEntry, ...history.filter(h => h.menu_name !== newEntry.menu_name)].slice(0, 20);
             localStorage.setItem("recipeHistory", JSON.stringify(history));
           } catch (e) {
-            console.error("Gagal menyimpan riwayat resep", e);
+            console.error("Gagal menyimpan riwayat resep lokal", e);
           }
         } else {
           throw new Error(result.message || "Gagal mengambil resep dari AI");
@@ -140,8 +191,10 @@ export default function DetailResepPage() {
         setIsGeneratingRecipe(false);
       }
     }
-    
-    fetchAiRecipe();
+
+    // JALANKAN KEDUA FUNGSI SAAT HALAMAN DIBUKA
+    saveToHistoryDirectly(); // <--- Ini langsung jalan instan di background
+    fetchAiRecipe();         // <--- Ini berjalan sembari menunggu loading Gemini
 
     return () => clearTimeout(timer);
   }, [recipe, navigate]);
@@ -153,38 +206,38 @@ export default function DetailResepPage() {
   const nuts = recipe?.nutrients || {};
 
   const nutrition = {
-    kalori: { 
-      value: recipe["Energy kcal"] ?? recipe.kalori ?? nuts["Energy kcal"] ?? "–", 
-      unit: "kkal", 
-      akg: Math.round((parseFloat(recipe["Energy kcal"] ?? recipe.kalori ?? nuts["Energy kcal"] ?? 0)) / 2000 * 100) 
+    kalori: {
+      value: recipe["Energy kcal"] ?? recipe.kalori ?? nuts["Energy kcal"] ?? "–",
+      unit: "kkal",
+      akg: Math.round((parseFloat(recipe["Energy kcal"] ?? recipe.kalori ?? nuts["Energy kcal"] ?? 0)) / 2000 * 100)
     },
-    protein: { 
-      value: recipe["Protein(g)"] ?? nuts["Protein(g)"] ?? "–",  
-      unit: "g",   
-      akg: Math.round((parseFloat(recipe["Protein(g)"] ?? nuts["Protein(g)"] ?? 0)) / 60 * 100) 
+    protein: {
+      value: recipe["Protein(g)"] ?? nuts["Protein(g)"] ?? "–",
+      unit: "g",
+      akg: Math.round((parseFloat(recipe["Protein(g)"] ?? nuts["Protein(g)"] ?? 0)) / 60 * 100)
     },
-    lemak: { 
-      value: recipe["Fat(g)"] ?? nuts["Fat(g)"] ?? "–",      
-      unit: "g",   
-      akg: Math.round((parseFloat(recipe["Fat(g)"] ?? nuts["Fat(g)"] ?? 0)) / 67 * 100) 
+    lemak: {
+      value: recipe["Fat(g)"] ?? nuts["Fat(g)"] ?? "–",
+      unit: "g",
+      akg: Math.round((parseFloat(recipe["Fat(g)"] ?? nuts["Fat(g)"] ?? 0)) / 67 * 100)
     },
-    karbohidrat: { 
-      value: recipe["Carbs"] ?? nuts["Carbs"] ?? "–",       
-      unit: "g",   
-      akg: Math.round((parseFloat(recipe["Carbs"] ?? nuts["Carbs"] ?? 0)) / 300 * 100) 
+    karbohidrat: {
+      value: recipe["Carbs"] ?? nuts["Carbs"] ?? "–",
+      unit: "g",
+      akg: Math.round((parseFloat(recipe["Carbs"] ?? nuts["Carbs"] ?? 0)) / 300 * 100)
     },
-    serat: { 
-      value: recipe["Fibre(g)"] ?? nuts["Fibre(g)"] ?? "–",    
-      unit: "g",   
-      akg: Math.round((parseFloat(recipe["Fibre(g)"] ?? nuts["Fibre(g)"] ?? 0)) / 30 * 100) 
+    serat: {
+      value: recipe["Fibre(g)"] ?? nuts["Fibre(g)"] ?? "–",
+      unit: "g",
+      akg: Math.round((parseFloat(recipe["Fibre(g)"] ?? nuts["Fibre(g)"] ?? 0)) / 30 * 100)
     },
-    kalsium: { 
-      value: recipe["Calcium(mg)"] ?? nuts["Calcium(mg)"] ?? "–", 
-      unit: "mg",  
-      akg: Math.round((parseFloat(recipe["Calcium(mg)"] ?? nuts["Calcium(mg)"] ?? 0)) / 1000 * 100) 
+    kalsium: {
+      value: recipe["Calcium(mg)"] ?? nuts["Calcium(mg)"] ?? "–",
+      unit: "mg",
+      akg: Math.round((parseFloat(recipe["Calcium(mg)"] ?? nuts["Calcium(mg)"] ?? 0)) / 1000 * 100)
     },
   };
-  
+
   return (
     <main className="flex-grow max-w-7xl mx-auto w-full px-container-margin md:px-lg py-lg md:py-xxl flex flex-col gap-xl">
       <button
@@ -316,17 +369,17 @@ export default function DetailResepPage() {
               </div>
             </section>
           ) : null}
-          
+
           {/* Catatan Gizi */}
           {!isGeneratingRecipe && aiRecipe?.catatan_gizi && (
-             <section className="bg-primary/10 rounded-xl border border-primary/20 p-lg reveal">
-               <h2 className="text-[16px] text-primary flex items-center gap-sm mb-sm font-semibold tracking-tight">
-                 <span className="material-symbols-outlined">lightbulb</span> CATATAN GIZI
-               </h2>
-               <p className="text-[14px] text-foreground leading-relaxed">
-                 {aiRecipe.catatan_gizi}
-               </p>
-             </section>
+            <section className="bg-primary/10 rounded-xl border border-primary/20 p-lg reveal">
+              <h2 className="text-[16px] text-primary flex items-center gap-sm mb-sm font-semibold tracking-tight">
+                <span className="material-symbols-outlined">lightbulb</span> CATATAN GIZI
+              </h2>
+              <p className="text-[14px] text-foreground leading-relaxed">
+                {aiRecipe.catatan_gizi}
+              </p>
+            </section>
           )}
 
           {/* Fallback / Error */}
