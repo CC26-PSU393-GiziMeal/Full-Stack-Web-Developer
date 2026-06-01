@@ -160,7 +160,7 @@ export default function LoginPage() {
             <div className="flex flex-col gap-sm">
               <div className="flex justify-between items-center">
                 <label className="text-[14px] font-semibold text-on-surface" htmlFor="password">Password</label>
-                <a href="#" className="text-[12px] text-outline hover:text-secondary transition-colors">Lupa password?</a>
+                {/* <a href="#" className="text-[12px] text-outline hover:text-secondary transition-colors">Lupa password?</a> */}
               </div>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">lock</span>
