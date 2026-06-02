@@ -1,10 +1,10 @@
 const TEAM = [
-  { initials: "AK", name: "Azharangga Kusuma",      role: "AI Engineer & PM",  cohort: "CACC370D6Y0721", path: "AI Engineer",         bg: "bg-primary/20", text: "text-secondary-foreground" },
-  { initials: "PN", name: "Putri Nabilla",          role: "AI Engineer",       cohort: "CACC370D6X1171", path: "AI Engineer",         bg: "bg-secondary",        text: "text-white" },
-  { initials: "FR", name: "Farina Setya Rahesti",   role: "Data Scientist",    cohort: "CDCC796D6X0089", path: "Data Scientist",      bg: "bg-primary/40",       text: "text-secondary-foreground" },
-  { initials: "MB", name: "Mahaputri Buana Devwitasari",   role: "Data Scientist",    cohort: "CDCC796D6X0088", path: "Data Scientist",      bg: "bg-secondary",          text: "text-white" },
-  { initials: "MD", name: "M. Dava Arya Nada Putra",role: "Frontend Developer", cohort: "CFCC258D6Y1955", path: "Full-Stack Web Dev", bg: "bg-primary/40", text: "text-secondary-foreground" },
-  { initials: "MI", name: "Muhammad Ihsanul Dzaky",role: "Backend Developer",  cohort: "CFCC308D6Y1451", path: "Full-Stack Web Dev", bg: "bg-secondary",   text: "text-white" },
+  { initials: "AK", name: "Azharangga Kusuma",      role: "AI Engineer & PM",  cohort: "CACC370D6Y0721", path: "AI Engineer",         bg: "bg-secondary", text: "text-white", github: "https://github.com/azharanggakusuma", email: "CACC370D6Y0721@student.devacademy.id" },
+  { initials: "PN", name: "Putri Nabilla",          role: "AI Engineer",       cohort: "CACC370D6X1171", path: "AI Engineer",         bg: "bg-secondary", text: "text-white", github: "https://github.com/putribila", email: "CACC370D6X1171@student.devacademy.id" },
+  { initials: "FR", name: "Farina Setya Rahesti",   role: "Data Scientist",    cohort: "CDCC796D6X0089", path: "Data Scientist",      bg: "bg-secondary", text: "text-white", github: "https://github.com/farinasetyarahesti", email: "CDCC796D6X0089@student.devacademy.id" },
+  { initials: "MB", name: "Mahaputri Buana Devwitasari",   role: "Data Scientist",    cohort: "CDCC796D6X0088", path: "Data Scientist",      bg: "bg-secondary", text: "text-white", github: "https://github.com/mahaputribuanaa", email: "CDCC796D6X0088@student.devacademy.id" },
+  { initials: "MD", name: "M. Dava Arya Nada Putra",role: "Frontend Developer", cohort: "CFCC258D6Y1955", path: "Full-Stack Web Dev", bg: "bg-secondary", text: "text-white", github: "https://github.com/mdavaarya", email: "CFCC258D6Y1955@student.devacademy.id" },
+  { initials: "MI", name: "Muhammad Ihsanul Dzaky",role: "Backend Developer",  cohort: "CFCC308D6Y1451", path: "Full-Stack Web Dev", bg: "bg-secondary", text: "text-white", github: "https://github.com/ihsanulDzaky", email: "CFCC308D6Y1451@student.devacademy.id" },
 ];
 
 const STEPS = [
@@ -55,13 +55,14 @@ const PENDEKATAN = [
 
 function TeamCard({ member }) {
   return (
-    <div className="bg-card rounded-[16px] p-md border border-border flex flex-col items-center text-center hover:shadow-md hover:border-primary/30 transition-all hover:-translate-y-1 group w-full">
-      <div className={`w-16 h-16 rounded-full ${member.bg} ${member.text} flex items-center justify-center text-[20px] font-semibold shadow-sm mb-sm`}>
+    <div className="bg-card rounded-[16px] p-md border border-border flex flex-col items-center text-center hover:shadow-md hover:border-primary/30 transition-all hover:-translate-y-1 group w-full h-full relative overflow-hidden">
+      <div className={`w-16 h-16 rounded-full ${member.bg} ${member.text} flex items-center justify-center text-[20px] font-semibold shadow-sm mb-sm flex-shrink-0`}>
         {member.initials}
       </div>
       <h3 className="text-[15px] font-semibold text-foreground leading-snug">{member.name}</h3>
-      <p className="text-[12px] font-medium text-secondary mt-xs mb-sm">{member.role}</p>
-      <div className="w-full bg-surface rounded-xl p-sm space-y-xs text-left">
+      <p className="text-[12px] font-medium text-secondary mt-xs mb-md">{member.role}</p>
+      
+      <div className="w-full bg-surface rounded-xl p-sm space-y-xs text-left mb-sm mt-auto">
         <div className="flex justify-between items-center">
           <span className="text-[10px] font-semibold tracking-[0.22em] text-muted-foreground uppercase">Cohort</span>
           <span className="text-[11px] font-semibold text-foreground tabular-nums">{member.cohort}</span>
@@ -70,6 +71,21 @@ function TeamCard({ member }) {
           <span className="text-[10px] font-semibold tracking-[0.22em] text-muted-foreground uppercase">Path</span>
           <span className="text-[11px] font-semibold text-foreground">{member.path}</span>
         </div>
+      </div>
+
+      <div className="flex justify-center items-center gap-sm mt-xs border-t border-border/50 pt-sm w-full">
+        {member.github && (
+          <a href={member.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors p-1 flex items-center justify-center" title="GitHub">
+            <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="currentColor">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+          </a>
+        )}
+        {member.email && (
+          <a href={`mailto:${member.email}`} className="text-muted-foreground hover:text-foreground transition-colors p-1 flex items-center justify-center" title="Email">
+            <span className="material-symbols-outlined text-[20px]">mail</span>
+          </a>
+        )}
       </div>
     </div>
   );

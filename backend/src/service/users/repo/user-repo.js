@@ -131,7 +131,7 @@ async saveRecipeHistory(userId, menuName, recipeData) {
 async getRecipeHistory(userId) {
   const { data, error } = await supabase
     .from('recipe_history')
-    .select('id, menu_name, created_at')
+    .select('id, menu_name, recipe_data, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -149,6 +149,15 @@ async getRecipeHistory(userId) {
 
     if (error) throw new Error(error.message);
     return data;
+  }
+
+  async updateAccountInfo(userId, { firstName, lastName }) {
+    const { data, error } = await supabase.auth.admin.updateUserById(
+      userId,
+      { user_metadata: { firstName, lastName } }
+    );
+    if (error) throw new Error(`Gagal update profil: ${error.message}`);
+    return data.user;
   }
 }
 

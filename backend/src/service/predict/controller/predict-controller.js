@@ -2,6 +2,7 @@ import PredictRepo from "../repo/predict-repo.js";
 import UserRepo from "../../users/repo/user-repo.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+
 export async function predict(req, res) {
   try {
     // 1. Validasi File Masuk
@@ -160,8 +161,8 @@ export async function getRecipeDetails(req, res) {
           const isServerBusy = error.status === 503 || error.status === 429 || error.message.includes("503") || error.message.includes("429");
           
           if (isServerBusy && attempts < maxAttempts) {
-            console.warn(`Model ${currentModelName} sibuk/limit harian. Menunggu 8 detik sebelum mencoba ulang ke-${attempts + 1}...`);
-            await delay(8000); // Beri nafas ke server Google selama 8 detik sebelum dicoba ulang
+            console.warn(`Model ${currentModelName} sibuk/limit harian. Menunggu 5 detik sebelum mencoba ulang ke-${attempts + 1}...`);
+            await delay(5000); // Tunggu 5 detik
           } else {
             throw error; // Jika error fatal / permanen (seperti API Key salah), langsung lempar ke catch utama
           }

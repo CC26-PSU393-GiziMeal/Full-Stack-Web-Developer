@@ -128,3 +128,27 @@ export async function changePassword(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
+export async function updateAccount(req, res) {
+  const { userId } = req.params;
+  const { firstName, lastName } = req.body;
+  if (!userId) return res.status(400).json({ error: 'User ID wajib disertakan' });
+  try {
+    const user = await UserRepo.updateAccountInfo(userId, { firstName, lastName });
+    res.status(200).json({ message: 'Informasi akun berhasil diperbarui', user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function updateBiometrikData(req, res) {
+  const { userId } = req.params;
+  const { gender, usia, berat, tinggi } = req.body;
+  if (!userId) return res.status(400).json({ error: 'User ID wajib disertakan' });
+  try {
+    await UserRepo.saveBiometrik(userId, { gender, usia, berat, tinggi });
+    res.status(200).json({ message: 'Informasi biometrik berhasil diperbarui' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}

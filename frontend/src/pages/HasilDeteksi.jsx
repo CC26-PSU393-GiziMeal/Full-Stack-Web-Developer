@@ -132,7 +132,31 @@ export default function HasilDeteksiPage() {
 
   const isSingle = predictions.length === 1;
   const singlePred = isSingle ? predictions[0] : null;
-  const menuRecommendations = result?.menu_recommendations || [];
+
+  let menuRecommendations = [];
+  if (result?.per_image_predictions && Array.isArray(result.per_image_predictions)) {
+    const allMenus = [];
+    result.per_image_predictions.forEach(pred => {
+      if (pred.menu_recommendations && Array.isArray(pred.menu_recommendations)) {
+        allMenus.push(...pred.menu_recommendations);
+      }
+    });
+    if (allMenus.length > 0) {
+      const uniqueMenus = [];
+      const seen = new Set();
+      allMenus.forEach(m => {
+        if (!seen.has(m.menu_name)) {
+          seen.add(m.menu_name);
+          uniqueMenus.push(m);
+        }
+      });
+      menuRecommendations = uniqueMenus;
+    } else {
+      menuRecommendations = result?.menu_recommendations || [];
+    }
+  } else {
+    menuRecommendations = result?.menu_recommendations || [];
+  }
 
   if (!rawResult) return null;
 

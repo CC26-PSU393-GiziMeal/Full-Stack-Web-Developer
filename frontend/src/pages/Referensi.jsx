@@ -11,28 +11,28 @@ const DATASETS = [
     title: "Ingredients Bahan Makanan Image Gambar",
     author: "Kaggle, byrux12 · 2024",
     desc: "Dataset gambar 15 kelas bahan makanan lokal untuk pelatihan model klasifikasi pada fitur Deteksi Bahan GiziMeal.",
-    url: "#",
+    url: "https://www.kaggle.com/datasets/byrux12/ingredients-bahan-makanan-image-gambar",
   },
   {
     type: "KAGGLE DATASET (GAMBAR)",
     title: "Fruits and Vegetables Image Recognition Dataset",
     author: "Kaggle, Kritik Seth · 2020",
     desc: "Dataset gambar 36 kelas buah dan sayuran (100 gambar per kelas) untuk memperkaya variasi data pelatihan model klasifikasi bahan makanan.",
-    url: "#",
+    url: "https://www.kaggle.com/datasets/kritikseth/fruit-and-vegetable-image-recognition",
   },
   {
     type: "KAGGLE DATASET (GAMBAR)",
     title: "Vegetable Image Dataset",
     author: "Kaggle, M Israk Ahmed · 2021",
     desc: "Dataset 21.000 gambar dari 15 kelas sayuran (resolusi 224×224) yang dikumpulkan dari kebun dan pasar untuk klasifikasi dan pengenalan sayuran.",
-    url: "#",
+    url: "https://www.kaggle.com/datasets/misrakahmed/vegetable-image-dataset",
   },
   {
     type: "KAGGLE DATASET (CSV)",
     title: "Foods Nutrition Dataset",
     author: "Kaggle, adarshzolekar · 2023",
     desc: "File CSV berisi daftar nama menu makanan beserta kandungan gizinya (energi, karbohidrat, protein, lemak, serat, kalsium). Digunakan sebagai sumber data Database Makanan dan perhitungan skor AKG.",
-    url: "#",
+    url: "https://www.kaggle.com/datasets/adarshzolekar/foods-nutrition-dataset",
   },
 ];
 

@@ -174,6 +174,66 @@ function ModalHapusAkun({ onClose, onConfirm }) {
   );
 }
 
+function ModalEditAkun({ onClose, onSuccess, initialData }) {
+  const [form, setForm] = useState({ firstName: initialData.firstName || "", lastName: initialData.lastName || "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async () => {
+    if (!form.firstName) { setError("Nama depan wajib diisi."); return; }
+    setError(""); setLoading(true);
+    try {
+      const userRaw = localStorage.getItem("user");
+      const userId = JSON.parse(userRaw).id;
+      const res = await fetch(`http://localhost:3000/api/users/account/${userId}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal update akun");
+      
+      const oldUser = JSON.parse(userRaw);
+      oldUser.user_metadata = { ...oldUser.user_metadata, firstName: form.firstName, lastName: form.lastName };
+      localStorage.setItem("user", JSON.stringify(oldUser));
+      onSuccess(oldUser);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputClass = "w-full bg-surface-container-low border border-outline-variant rounded-lg py-[14px] px-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary transition-all text-[15px]";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-md">
+      <div className="bg-surface-container-lowest rounded-[24px] border border-outline-variant p-xl w-full max-w-md shadow-2xl">
+        <div className="flex justify-between items-center mb-lg">
+          <h3 className="text-[20px] tracking-tight text-primary font-semibold">Edit Informasi Akun</h3>
+          <button onClick={onClose} disabled={loading} className="text-on-surface-variant hover:text-on-surface p-1 rounded-full transition-colors disabled:opacity-30">
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div className="space-y-md">
+          <div className="space-y-xs">
+            <label className="text-[14px] font-semibold text-on-surface">Nama Depan</label>
+            <input type="text" value={form.firstName} onChange={(e) => setForm({...form, firstName: e.target.value})} className={inputClass} disabled={loading} placeholder="Masukkan nama depan" />
+          </div>
+          <div className="space-y-xs">
+            <label className="text-[14px] font-semibold text-on-surface">Nama Belakang</label>
+            <input type="text" value={form.lastName} onChange={(e) => setForm({...form, lastName: e.target.value})} className={inputClass} disabled={loading} placeholder="Masukkan nama belakang" />
+          </div>
+          {error && <p className="text-[13px] text-destructive font-medium">{error}</p>}
+          <button onClick={submit} disabled={loading} className="w-full bg-primary text-on-primary font-semibold py-md rounded-xl hover:bg-surface-tint transition-all active:scale-[0.98] mt-sm flex items-center justify-center gap-sm shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+            {loading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
+            {loading ? "Menyimpan..." : "Simpan Perubahan"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const isLogged = !!localStorage.getItem("authToken");
@@ -313,6 +373,20 @@ export default function ProfilePage() {
     <>
       {modal === "password" && <ModalGantiPassword onClose={() => setModal(null)} />}
       {modal === "hapus" && <ModalHapusAkun onClose={() => setModal(null)} onConfirm={handleHapusAkun} />}
+      {modal === "editAkun" && <ModalEditAkun 
+        initialData={{ 
+          firstName: JSON.parse(localStorage.getItem("user"))?.user_metadata?.firstName || "", 
+          lastName: JSON.parse(localStorage.getItem("user"))?.user_metadata?.lastName || "" 
+        }} 
+        onClose={() => setModal(null)} 
+        onSuccess={(newUser) => {
+          const first = newUser.user_metadata.firstName || "";
+          const last = newUser.user_metadata.lastName || "";
+          setUserProfile(prev => ({ ...prev, name: `${first} ${last}`.trim() || "Pengguna GiziMeal" }));
+          setModal(null);
+        }} 
+      />}
+
 
       <main className="flex-grow w-full max-w-5xl mx-auto px-container-margin md:px-lg py-xl md:py-lg space-y-lg">
 
@@ -338,10 +412,15 @@ export default function ProfilePage() {
 
         {/* SECTION 1: Informasi Akun */}
         <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
-          <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
-            <span className="material-symbols-outlined text-[22px]">person</span>
-            Informasi Akun
-          </h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
+              <span className="material-symbols-outlined text-[22px]">person</span>
+              Informasi Akun
+            </h2>
+            <button onClick={() => setModal("editAkun")} className="text-muted-foreground hover:text-primary transition-colors p-1" title="Edit Informasi Akun">
+              <span className="material-symbols-outlined text-[20px]">edit</span>
+            </button>
+          </div>
           <ul className="flex flex-col">
             {accountItems.map((item, idx) => (
               <li key={item.label} className={`flex items-center gap-md py-md ${idx !== accountItems.length - 1 ? 'border-b border-border/50' : ''}`}>
@@ -357,10 +436,15 @@ export default function ProfilePage() {
 
         {/* SECTION 2: Informasi Fisik & Biometrik */}
         <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
-          <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
-            <span className="material-symbols-outlined text-[22px]">accessibility_new</span>
-            Informasi Fisik & Biometrik
-          </h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
+              <span className="material-symbols-outlined text-[22px]">accessibility_new</span>
+              Informasi Fisik & Biometrik
+            </h2>
+            <button onClick={() => navigate("/kalkulator")} className="text-muted-foreground hover:text-primary transition-colors p-1" title="Edit Informasi Fisik & Biometrik">
+              <span className="material-symbols-outlined text-[20px]">edit</span>
+            </button>
+          </div>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-lg">
             {biometrikItems.map((item) => (
               <li key={item.label} className="flex items-center gap-md py-md border-b border-border/50">
@@ -509,7 +593,7 @@ export default function ProfilePage() {
                     <tr
                       key={item.id}
                       onClick={() => {
-                        navigate("/deteksi/hasil/resep", {
+                        navigate(`/deteksi/hasil/${encodeURIComponent(item.menu_name)}`, {
                           state: {
                             recipe: item.recipe_data
                           }

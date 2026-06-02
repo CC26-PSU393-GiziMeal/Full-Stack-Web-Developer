@@ -35,13 +35,13 @@ export default function RegisterPage() {
   const [showConf, setShowConf] = useState(false);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", confirm: "", agree: false });
   const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState(""); 
+  const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [strength, setStrength] = useState({ score: 0, checks: {}, label: "", color: "" });
 
-  useEffect(() => { 
-    setStrength(getStrength(form.password)); 
+  useEffect(() => {
+    setStrength(getStrength(form.password));
   }, [form.password]);
 
   const set = (key) => (e) =>
@@ -66,7 +66,7 @@ export default function RegisterPage() {
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
     setErrors({});
-    setServerError(""); 
+    setServerError("");
     setIsLoading(true);
 
     try {
@@ -77,7 +77,7 @@ export default function RegisterPage() {
         },
         body: JSON.stringify({
           firstName: form.firstName,
-          lastName: form.lastName, 
+          lastName: form.lastName,
           email: form.email,
           password: form.password
         }),
@@ -93,15 +93,20 @@ export default function RegisterPage() {
       }
 
       Swal.fire({
-              icon: "success",
-              title: "Selamat",
-              text: "Akun anda berhasil didaftarkan",
-              confirmButtonColor: "var(--color-secondary, #2196f3)",
-            });
+        icon: "success",
+        title: "Selamat",
+        text: "Akun anda berhasil didaftarkan",
+        confirmButtonColor: "var(--color-secondary, #2196f3)",
+      });
       navigate("/auth/login");
 
     } catch (err) {
-      setServerError(err.message);
+      if (err.message.toLowerCase().includes("registered") || err.message.toLowerCase().includes("email")) {
+        setErrors(prev => ({ ...prev, email: err.message }));
+        setServerError("");
+      } else {
+        setServerError(err.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -202,8 +207,12 @@ export default function RegisterPage() {
                   type="email"
                   value={form.email}
                   onChange={set("email")}
-                  placeholder="budi@example.com"
-                  className={`${inputBase} pl-[44px] pr-md ${errors.email ? "ring-1 ring-error border-error" : ""}`}
+                  placeholder="anda@email.com"
+                  className={`w-full border rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 transition-all ${
+                    errors.email
+                      ? "border-red-500 focus:ring-red-400 bg-red-50"
+                      : "border-gray-300 focus:ring-blue-400 bg-surface"
+                  }`}
                 />
               </div>
               {errors.email && <p className="text-[11px] text-error font-medium">{errors.email}</p>}
@@ -244,13 +253,12 @@ export default function RegisterPage() {
                       />
                     ))}
                     {strength.label && (
-                      <span className={`text-[10px] font-bold px-xs py-[2px] rounded ml-sm whitespace-nowrap ${
-                        strength.score >= 4
+                      <span className={`text-[10px] font-bold px-xs py-[2px] rounded ml-sm whitespace-nowrap ${strength.score >= 4
                           ? "bg-secondary/10 text-secondary"
                           : strength.score >= 3
                             ? "bg-[#E8A020]/10 text-[#B87A10]"
                             : "bg-error/10 text-error"
-                      }`}>
+                        }`}>
                         {strength.label}
                       </span>
                     )}

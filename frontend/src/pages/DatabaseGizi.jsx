@@ -78,6 +78,7 @@ export default function DatabaseGiziPage() {
             "Fat(g)": parseFloat(item["Fat(g)"] || 0),
             "Fibre(g)": parseFloat(item["Fibre(g)"] || 0),
             "Calcium(mg)": parseFloat(item["Calcium(mg)"] || 0),
+            score_akg: parseFloat(item.score_akg || 0),
           };
         });
 
@@ -222,26 +223,27 @@ export default function DatabaseGiziPage() {
                 <th className="px-md py-sm text-right">Lemak (g)</th>
                 <th className="px-md py-sm text-right">Serat (g)</th>
                 <th className="px-md py-sm text-right">Kalsium (mg)</th>
+                <th className="px-md py-sm text-right">AKG</th>
               </tr>
             </thead>
             <tbody className="text-[14px] text-foreground divide-y divide-border/50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-md py-xl text-center text-muted-foreground">
+                  <td colSpan={9} className="px-md py-xl text-center text-muted-foreground">
                     <span className="material-symbols-outlined text-[24px] animate-spin mb-1 block">progress_activity</span>
                     Sinkronisasi basis data nutrisi cloud...
                   </td>
                 </tr>
               ) : errorMessage ? (
                 <tr>
-                  <td colSpan={8} className="px-md py-xl text-center text-destructive font-medium">
+                  <td colSpan={9} className="px-md py-xl text-center text-destructive font-medium">
                     <span className="material-symbols-outlined text-[24px] mb-1 block">cloud_off</span>
                     Gagal memuat data: {errorMessage}
                   </td>
                 </tr>
               ) : pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-md py-sm text-center text-muted-foreground">
+                  <td colSpan={9} className="px-md py-sm text-center text-muted-foreground">
                     Tidak ada data yang sesuai.
                   </td>
                 </tr>
@@ -258,6 +260,7 @@ export default function DatabaseGiziPage() {
                     <td className="px-md py-sm text-right tabular-nums">{numFmt(row["Fat(g)"])}</td>
                     <td className="px-md py-sm text-right tabular-nums">{numFmt(row["Fibre(g)"])}</td>
                     <td className="px-md py-sm text-right tabular-nums">{numFmt(row["Calcium(mg)"])}</td>
+                    <td className="px-md py-sm text-right tabular-nums text-primary font-semibold">{numFmt(row.score_akg)}</td>
                   </tr>
                 ))
               )}

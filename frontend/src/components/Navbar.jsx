@@ -9,6 +9,7 @@ const navLinks = [
   { label: "Tentang", to: "/tentang" },
   { label: "Deteksi", to: "/deteksi" },
   { label: "Kalkulator", to: "/kalkulator" },
+  { label: "Tabel Gizi", to: "/database" },
   { label: "Referensi", to: "/referensi" },
   { label: "FAQ", to: "/faq" },
 ];
