@@ -161,8 +161,8 @@ export async function getRecipeDetails(req, res) {
           const isServerBusy = error.status === 503 || error.status === 429 || error.message.includes("503") || error.message.includes("429");
           
           if (isServerBusy && attempts < maxAttempts) {
-            console.warn(`Model ${currentModelName} sibuk/limit harian. Menunggu 5 detik sebelum mencoba ulang ke-${attempts + 1}...`);
-            await delay(5000); // Tunggu 5 detik
+            console.warn(`Model ${currentModelName} sibuk/limit harian. Menunggu 8 detik sebelum mencoba ulang ke-${attempts + 1}...`);
+            await delay(8000); // Tunggu 8 detik
           } else {
             throw error; // Jika error fatal / permanen (seperti API Key salah), langsung lempar ke catch utama
           }
