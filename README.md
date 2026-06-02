@@ -8,15 +8,15 @@
 
 1. **AI Image Recognition (Deteksi Bahan Makanan)**
    * Mengunggah gambar bahan makanan (single atau multi-images).
-   * Klasifikasi otomatis jenis bahan makanan menggunakan Model Deep Learning GiziMeal.
-   * Rekomendasi resep dan analisis nutrisi instan menggunakan integrasi **Google Gemini AI**.
-
+   * Klasifikasi otomatis jenis bahan makanan menggunakan **Model AI GiziMeal** yang sudah dilatih.
+   * Rekomendasi resep dan analisis nutrisi instan berdasarkan bahan makanan yang dideteksi.
+       
 2. **Kalkulator AKG & Gizi Harian**
    * Menghitung nilai **BMR (Basal Metabolic Rate)** dan **TDEE (Total Daily Energy Expenditure)** berdasarkan profil fisik (Jenis Kelamin, Usia, Berat Badan, Tinggi Badan) dan tingkat aktivitas.
    * Memberikan target makronutrisi harian (Karbohidrat, Protein, Lemak) yang disesuaikan dengan target kesehatan pengguna (Maintain, Weight Loss, Weight Gain).
 
 3. **Tabel Database Gizi**
-   * Menampilkan basis data nutrisi makanan lengkap yang tersinkronisasi dari Cloud API.
+   * Menampilkan basis data nutrisi makanan sesuai dnegan dataset yang sudah di bersihkan.
    * Dilengkapi fitur pencarian, filter, pengurutan (kalori terendah/tertinggi, protein tinggi, serat tinggi), serta visualisasi skor AKG.
 
 4. **Riwayat Resep AI (Persistensi Data)**
@@ -39,7 +39,7 @@
 ### Backend
 * **Runtime & Framework**: Node.js & Express.js
 * **Database Client**: Supabase JS SDK
-* **AI Engine**: `@google/generative-ai` (Gemini API)
+* **AI Engine**: Model AI GiziMeal
 * **Tools**: Nodemon, Multer, Axios
 
 ---
