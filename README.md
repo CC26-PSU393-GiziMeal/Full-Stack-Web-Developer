@@ -39,7 +39,6 @@
 ### Backend
 * **Runtime & Framework**: Node.js & Express.js
 * **Database Client**: Supabase JS SDK
-* **AI Engine**: Model AI GiziMeal
 * **Tools**: Nodemon, Multer, Axios
 
 ---
