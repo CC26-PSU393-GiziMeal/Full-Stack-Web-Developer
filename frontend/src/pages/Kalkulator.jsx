@@ -114,7 +114,7 @@ export default function KalkulatorPage() {
     setIsSaving(true);
 
     try {
-      const response = await fetch("http://localhost:3000/api/calculate", {
+      const response = await fetch("http://localhost:3000/calculate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -167,7 +167,7 @@ export default function KalkulatorPage() {
       if (!userRaw) throw new Error("Sesi pengguna tidak ditemukan. Silakan login kembali.");
       const userId = JSON.parse(userRaw).id;
 
-      const response = await fetch("http://localhost:3000/api/calculate", {
+      const response = await fetch("http://localhost:3000/calculate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

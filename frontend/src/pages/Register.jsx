@@ -1,5 +1,4 @@
 /* eslint-disable no-useless-assignment */
-/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logoGiziMeal from "../assets/logo-dark-transparan.png";
@@ -70,7 +69,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/api/users/register", {
+      const response = await fetch("http://localhost:3000/users/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

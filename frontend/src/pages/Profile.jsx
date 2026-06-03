@@ -47,7 +47,7 @@ function ModalGantiPassword({ onClose }) {
       }
       const userId = JSON.parse(userRaw).id;
 
-      const response = await fetch("http://localhost:3000/api/users/changePassword", {
+      const response = await fetch("http://localhost:3000/users/changePassword", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -185,13 +185,13 @@ function ModalEditAkun({ onClose, onSuccess, initialData }) {
     try {
       const userRaw = localStorage.getItem("user");
       const userId = JSON.parse(userRaw).id;
-      const res = await fetch(`http://localhost:3000/api/users/account/${userId}`, {
+      const res = await fetch(`http://localhost:3000/users/account/${userId}`, {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gagal update akun");
-      
+
       const oldUser = JSON.parse(userRaw);
       oldUser.user_metadata = { ...oldUser.user_metadata, firstName: form.firstName, lastName: form.lastName };
       localStorage.setItem("user", JSON.stringify(oldUser));
@@ -217,11 +217,11 @@ function ModalEditAkun({ onClose, onSuccess, initialData }) {
         <div className="space-y-md">
           <div className="space-y-xs">
             <label className="text-[14px] font-semibold text-on-surface">Nama Depan</label>
-            <input type="text" value={form.firstName} onChange={(e) => setForm({...form, firstName: e.target.value})} className={inputClass} disabled={loading} placeholder="Masukkan nama depan" />
+            <input type="text" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} className={inputClass} disabled={loading} placeholder="Masukkan nama depan" />
           </div>
           <div className="space-y-xs">
             <label className="text-[14px] font-semibold text-on-surface">Nama Belakang</label>
-            <input type="text" value={form.lastName} onChange={(e) => setForm({...form, lastName: e.target.value})} className={inputClass} disabled={loading} placeholder="Masukkan nama belakang" />
+            <input type="text" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} className={inputClass} disabled={loading} placeholder="Masukkan nama belakang" />
           </div>
           {error && <p className="text-[13px] text-destructive font-medium">{error}</p>}
           <button onClick={submit} disabled={loading} className="w-full bg-primary text-on-primary font-semibold py-md rounded-xl hover:bg-surface-tint transition-all active:scale-[0.98] mt-sm flex items-center justify-center gap-sm shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
@@ -272,7 +272,7 @@ export default function ProfilePage() {
         if (!userRaw) return;
         const userId = JSON.parse(userRaw).id;
 
-        const response = await fetch(`http://localhost:3000/api/users/profile/${userId}`);
+        const response = await fetch(`http://localhost:3000/users/profile/${userId}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -294,8 +294,7 @@ export default function ProfilePage() {
         if (!userRaw) return;
         const userId = JSON.parse(userRaw).id;
 
-        // Ambil riwayat resep langsung dari database Supabase melalui API Backend
-        const response = await fetch(`http://localhost:3000/api/recipe-history/${userId}`);
+        const response = await fetch(`http://localhost:3000/recipe-history/${userId}`);
         const json = await response.json();
 
         if (response.ok && json.success) {
@@ -373,18 +372,18 @@ export default function ProfilePage() {
     <>
       {modal === "password" && <ModalGantiPassword onClose={() => setModal(null)} />}
       {modal === "hapus" && <ModalHapusAkun onClose={() => setModal(null)} onConfirm={handleHapusAkun} />}
-      {modal === "editAkun" && <ModalEditAkun 
-        initialData={{ 
-          firstName: JSON.parse(localStorage.getItem("user"))?.user_metadata?.firstName || "", 
-          lastName: JSON.parse(localStorage.getItem("user"))?.user_metadata?.lastName || "" 
-        }} 
-        onClose={() => setModal(null)} 
+      {modal === "editAkun" && <ModalEditAkun
+        initialData={{
+          firstName: JSON.parse(localStorage.getItem("user"))?.user_metadata?.firstName || "",
+          lastName: JSON.parse(localStorage.getItem("user"))?.user_metadata?.lastName || ""
+        }}
+        onClose={() => setModal(null)}
         onSuccess={(newUser) => {
           const first = newUser.user_metadata.firstName || "";
           const last = newUser.user_metadata.lastName || "";
           setUserProfile(prev => ({ ...prev, name: `${first} ${last}`.trim() || "Pengguna GiziMeal" }));
           setModal(null);
-        }} 
+        }}
       />}
 
 
@@ -518,45 +517,45 @@ export default function ProfilePage() {
         </section>
 
         {/* Riwayat Scan */}
-        <section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
-          <div className="flex justify-between items-center">
-            <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
-              <span className="material-symbols-outlined text-[22px]">history</span>
-              Riwayat Scan
-            </h2>
-            <button onClick={() => navigate("/deteksi")} className="text-secondary text-[13px] font-semibold hover:underline flex items-center gap-xs">
-              Scan baru <span className="material-symbols-outlined text-[16px]">add</span>
-            </button>
-          </div>
+<section className="bg-card rounded-[24px] border border-border p-md md:p-xl space-y-md reveal shadow-sm">
+  <div className="flex justify-between items-center">
+    <h2 className="text-[18px] tracking-tight text-primary font-semibold flex items-center gap-sm">
+      <span className="material-symbols-outlined text-[22px]">history</span>
+      Riwayat Scan
+    </h2>
+    <button onClick={() => navigate("/deteksi")} className="text-secondary text-[13px] font-semibold hover:underline flex items-center gap-xs">
+      Scan baru <span className="material-symbols-outlined text-[16px]">add</span>
+    </button>
+  </div>
 
-          {loadingData ? (
-            <p className="text-center py-sm text-muted-foreground">Memuat riwayat...</p>
-          ) : scanHistory.length === 0 ? (
-            <div className="text-center py-lg border border-dashed border-border rounded-xl">
-              <p className="text-muted-foreground text-[14px]">Belum ada riwayat hasil deteksi makanan.</p>
-            </div>
-          ) : (
-            <ul className="space-y-sm">
-              {scanHistory.slice(0, 5).map((item) => (
-                <li key={item.id} className="flex items-center gap-md bg-surface p-md rounded-xl border border-border hover:border-secondary transition-colors group cursor-pointer shadow-sm">
-                  <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-secondary text-[20px]">document_scanner</span>
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <p className="text-[15px] text-foreground font-medium truncate">{item.bahan}</p>
-                    <p className="text-[12px] text-muted-foreground mt-0.5">{item.waktu}</p>
-                  </div>
-                  <div className="flex items-center gap-sm flex-shrink-0">
-                    <span className={`text-[13px] font-semibold px-sm py-xs rounded-full tabular-nums ${item.skor >= 85 ? "bg-secondary/10 text-secondary" : item.skor >= 70 ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
-                      {item.skor}
-                    </span>
-                    <span className="material-symbols-outlined text-muted-foreground group-hover:text-secondary transition-colors text-[18px]">chevron_right</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+  {loadingData ? (
+    <p className="text-center py-sm text-muted-foreground">Memuat riwayat...</p>
+  ) : scanHistory.length === 0 ? (
+    <div className="text-center py-lg border border-dashed border-border rounded-xl">
+      <p className="text-muted-foreground text-[14px]">Belum ada riwayat hasil deteksi makanan.</p>
+    </div>
+  ) : (
+    <ul className="space-y-sm">
+      {scanHistory.slice(0, 5).map((item, index) => (
+        <li key={item.id || index} className="flex items-center gap-md bg-surface p-md rounded-xl border border-border hover:border-secondary transition-colors group cursor-pointer shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-secondary text-[20px]">document_scanner</span>
+          </div>
+          <div className="flex-grow min-w-0">
+            <p className="text-[15px] text-foreground font-medium truncate">{item.bahan || "Bahan Makanan"}</p>
+            <p className="text-[12px] text-muted-foreground mt-0.5">{item.waktu || "Baru saja"}</p>
+          </div>
+          <div className="flex items-center gap-sm flex-shrink-0">
+            <span className={`text-[13px] font-semibold px-sm py-xs rounded-full tabular-nums ${item.skor >= 85 ? "bg-secondary/10 text-secondary" : item.skor >= 70 ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
+              {item.skor}%
+            </span>
+            <span className="material-symbols-outlined text-muted-foreground group-hover:text-secondary transition-colors text-[18px]">chevron_right</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</section>
 
         {/* ========================================================== */}
         {/* SEKSI RIWAYAT RESEP AI (TERINTEGRASI SUPABASE BACKEND)     */}

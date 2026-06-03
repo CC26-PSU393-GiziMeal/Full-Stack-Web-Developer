@@ -61,7 +61,6 @@ export default function DeteksiPage() {
 
   const MAX_IMAGES = 15;
 
-  // 1. Fungsi Utama Validasi & Append File ke State
   const addFiles = (files) => {
     const valid = Array.from(files)
       .filter((f) => f.type.startsWith("image/"))
@@ -79,14 +78,12 @@ export default function DeteksiPage() {
     }
   };
 
-  // 2. Handler jika input dilempar lewat klik explorer
   const handleFileInput = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       addFiles(e.target.files);
     }
   };
 
-  // 3. Handler JELAS DAN AMAN untuk Drag & Drop Gambar
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -97,16 +94,14 @@ export default function DeteksiPage() {
     }
   };
 
-  // 4. Handler Hapus Preview Gambar
   const removeImage = (id) => {
     setImages((prev) => {
       const target = prev.find((img) => img.id === id);
-      if (target) URL.revokeObjectURL(target.url); // Cegah memory leak di browser
+      if (target) URL.revokeObjectURL(target.url); 
       return prev.filter((img) => img.id !== id);
     });
   };
 
-  // 5. Handler Kirim Data Multi-Image ke Server API
   const handleMulaiDeteksi = async () => {
     if (images.length === 0) return;
 
@@ -121,22 +116,19 @@ export default function DeteksiPage() {
     try {
       const formData = new FormData();
       
-      // Append semua file biner mentah ke key "files"
       images.forEach((img) => {
         formData.append("files", img.rawFile);
       });
 
-      // AMBIL USER ID UNTUK DIKIRIM VIA HEADERS (Lebih aman untuk Multipart FormData)
       let currentUserId = null;
       const userRaw = localStorage.getItem("user");
       if (userRaw) {
         currentUserId = JSON.parse(userRaw).id;
       }
 
-      const response = await fetch("http://localhost:3000/api/predict", {
+      const response = await fetch("http://localhost:3000/predict", {
         method: "POST",
         headers: {
-          // Kirim userId lewat header kustom agar tidak mengganggu biner gambar
           ...(currentUserId && { "X-User-Id": String(currentUserId) })
         },
         body: formData, 
@@ -144,14 +136,12 @@ export default function DeteksiPage() {
 
       const jsonResult = await response.json();
 
-      // Cek status HTTP request
       if (!response.ok || !jsonResult.success) {
         throw new Error(jsonResult.message || "Gagal melakukan deteksi citra.");
       }
 
       Swal.close();
       
-      // Navigasi ke halaman hasil dengan membawa payload data bersih
       navigate("/deteksi/hasil", { state: { result: jsonResult.data } });
 
     } catch (err) {

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable no-unused-vars */
 import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react"; // Tambahkan useRef di sini
+import { useState, useEffect, useRef } from "react";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
@@ -22,7 +22,7 @@ function usePexelsImage(query) {
       setImageError(false);
       try {
         const res = await fetch(
-          `${API_BASE}/api/pexels/image?query=${encodeURIComponent(query)}`
+          `${API_BASE}/pexels/image?query=${encodeURIComponent(query)}`
         );
         if (!res.ok) throw new Error(`Backend error: ${res.status}`);
         const json = await res.json();
@@ -80,8 +80,6 @@ export default function DetailResepPage() {
   const [aiError, setAiError] = useState(null);
 
   const recipe = location.state?.recipe;
-
-  // Membuat reference kunci pembatas render ganda React Strict Mode
   const hasSaved = useRef(false);
 
   useEffect(() => {
@@ -92,11 +90,7 @@ export default function DetailResepPage() {
     const timer = setTimeout(() => setAnimated(true), 100);
     const menuName = recipe.menu_name;
 
-    // =================================================================
-    // FUNGSI BARU: LANGSUNG SIMPAN KE SUPABASE BEGITU HALAMAN DIBUKA
-    // =================================================================
     async function saveToHistoryDirectly() {
-      // JIKA sudah pernah terkunci/tersimpan dalam siklus render ini, batalkan request kedua
       if (hasSaved.current) return;
 
       const userRaw = localStorage.getItem("user");
@@ -106,17 +100,14 @@ export default function DetailResepPage() {
         const parsedUser = JSON.parse(userRaw);
         const userId = parsedUser.id;
 
-        // JIKA userId tidak valid, batalkan request agar tidak memicu error 404/400
         if (!userId || userId === "null" || userId === "undefined") {
           console.warn("userId tidak valid, proses simpan dibatalkan.");
           return;
         }
 
-        // Kunci benderanya secara instan sebelum melakukan fetch
         hasSaved.current = true;
 
-        // Tembak endpoint POST ke backend untuk langsung catat ke Supabase
-        const resHistory = await fetch(`${API_BASE}/api/recipe-history`, {
+        const resHistory = await fetch(`${API_BASE}/recipe-history`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -132,7 +123,6 @@ export default function DetailResepPage() {
           console.log(`[Supabase] Riwayat untuk ${menuName} sukses tersimpan.`);
         } else {
           console.error(`[Backend Error] Status: ${resHistory.status}`);
-          // Jika server gagal memproses, buka kembali kuncinya agar bisa dicoba ulang saat refresh
           hasSaved.current = false;
         }
       } catch (err) {
@@ -141,7 +131,6 @@ export default function DetailResepPage() {
       }
     }
 
-    // Fetch AI Recipe (Tugas mengambil teks dari Gemini)
     async function fetchAiRecipe() {
       const cacheKey = `gizimeal_recipe_${menuName}`;
 
@@ -159,14 +148,13 @@ export default function DetailResepPage() {
       setAiError(null);
 
       try {
-        const response = await fetch(`${API_BASE}/api/recipe-details?menu_name=${encodeURIComponent(menuName)}`);
+        const response = await fetch(`${API_BASE}/recipe-details?menu_name=${encodeURIComponent(menuName)}`);
         const result = await response.json();
 
         if (response.ok && result.success && result.data) {
           setAiRecipe(result.data);
           localStorage.setItem(cacheKey, JSON.stringify(result.data));
 
-          // Simpan riwayat cadangan ke localStorage
           try {
             const historyRaw = localStorage.getItem("recipeHistory");
             let history = historyRaw ? JSON.parse(historyRaw) : [];
@@ -192,9 +180,8 @@ export default function DetailResepPage() {
       }
     }
 
-    // JALANKAN KEDUA FUNGSI SAAT HALAMAN DIBUKA
-    saveToHistoryDirectly(); // <--- Ini langsung jalan instan di background
-    fetchAiRecipe();         // <--- Ini berjalan sembari menunggu loading Gemini
+    saveToHistoryDirectly();
+    fetchAiRecipe();
 
     return () => clearTimeout(timer);
   }, [recipe, navigate]);

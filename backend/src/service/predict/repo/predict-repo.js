@@ -1,5 +1,4 @@
 import axios from "axios";
-// Import library form-data eksternal agar aman di semua versi Node.js
 import FormData from "form-data";
 
 const HF_API = "https://cc26-psu393-gizimeal-api.hf.space/predict";
@@ -11,7 +10,6 @@ class PredictRepo {
     try {
       const formData = new FormData();
 
-      // Memasukkan buffer biner langsung ke Form-Data (Sangat aman untuk Node.js lama & baru)
       files.forEach((file) => {
         formData.append("files", file.buffer, {
           filename: file.originalname,
@@ -19,15 +17,12 @@ class PredictRepo {
         });
       });
 
-      // Lakukan request ke Hugging Face
       const response = await axios.post(HF_API, formData, {
         headers: {
-          // Ambil boundary headers resmi dari library form-data eksternal
           ...formData.getHeaders(),
         }
       });
 
-      // PASTIKAN HANYA MENGEMBALIKAN response.data (berbentuk JSON murni)
       console.log("HF MULTI-IMAGE SUCCESS IN REPO:", response.data);
       return response.data;
 

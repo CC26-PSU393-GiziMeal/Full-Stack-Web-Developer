@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useState, useEffect } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
 import Navbar from "./components/Navbar";
@@ -35,13 +34,11 @@ function PlaceholderPage({ title }) {
 }
 
 function App() {
-  // DISKEMPURNAKAN: Mendukung deteksi otomatis tema default bawaan OS/Device user
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) {
       return saved === "dark";
     }
-    // Jika belum ada di localStorage, cek pengaturan browser/device
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
 

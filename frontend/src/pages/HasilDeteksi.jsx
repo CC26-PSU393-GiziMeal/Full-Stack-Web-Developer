@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-assignment */
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -9,7 +10,6 @@ function translateIngredient(englishName) {
   if (!englishName) return "Bahan";
   const trimmed = String(englishName).trim().toLowerCase();
 
-  // Fallback jika tidak ada di kamus, kapitalisasi huruf pertama
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 
@@ -27,7 +27,7 @@ function usePexelsImage(query) {
       setImageLoading(true);
       try {
         const res = await fetch(
-          `${API_BASE}/api/pexels/image?query=${encodeURIComponent(query)}`
+          `${API_BASE}/pexels/image?query=${encodeURIComponent(query)}`
         );
         if (!res.ok) throw new Error(`${res.status}`);
         const json = await res.json();
@@ -160,12 +160,10 @@ export default function HasilDeteksiPage() {
 
   if (!rawResult) return null;
 
-  // Mendapatkan nilai akurasi item pertama
   const confidenceValue = predictions.length > 0
     ? parseFloat(predictions[0].confidence_percent || (predictions[0].confidence_score ? predictions[0].confidence_score * 100 : 0))
     : 0;
 
-  // Gambar dinyatakan gagal terdeteksi hanya jika array hasil ekstraksi kosong
   const isDetectionFailed = predictions.length === 0;
 
   return (
@@ -244,21 +242,45 @@ export default function HasilDeteksiPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
                 {predictions.map((namaBahanMentah, i) => {
                   const detailPrediksiGambar = result?.per_image_predictions?.[i];
+
+                  let imgConfidence = "0%";
+                  let imgConfidenceValue = 0;
+
+                  if (detailPrediksiGambar) {
+                    if (detailPrediksiGambar.confidence_percent) {
+                      imgConfidence = detailPrediksiGambar.confidence_percent;
+                      imgConfidenceValue = parseFloat(detailPrediksiGambar.confidence_percent.replace("%", ""));
+                    } else if (detailPrediksiGambar.confidence_score) {
+                      imgConfidenceValue = detailPrediksiGambar.confidence_score * 100;
+                      imgConfidence = `${Math.round(imgConfidenceValue)}%`;
+                    }
+                  }
+
                   return (
-                    <div key={i} className="bg-card border border-border rounded-xl p-sm flex items-center justify-between">
-                      <div className="flex items-center gap-sm">
-                        <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center font-semibold text-foreground text-[13px] tabular-nums">
+                    <div key={i} className="bg-card border border-border rounded-xl p-md flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-md min-w-0">
+                        {/* Nomor Urut */}
+                        <div className="w-9 h-9 rounded-xl bg-surface-alt border border-border flex items-center justify-center font-bold text-foreground text-[14px] tabular-nums flex-shrink-0">
                           {i + 1}
                         </div>
-                        <div>
-                          <span className="text-[15px] font-semibold text-foreground block leading-none capitalize">
+                        <div className="min-w-0">
+                          <span className="text-[16px] font-semibold text-foreground block truncate capitalize leading-tight">
                             {translateIngredient(namaBahanMentah)}
                           </span>
-                          <span className="text-[12px] text-muted-foreground mt-2 block">
+                          <span className="text-[12px] text-muted-foreground mt-1 block truncate">
                             {detailPrediksiGambar?.filename || `Gambar ${i + 1}`}
                           </span>
                         </div>
                       </div>
+
+                      {/* CONFIDENCE VALUE MULTI-IMAGE */}
+                      <div className="flex items-center ">
+                        <div className="flex flex-col pr-xs">
+                          {/* <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider leading-none">Akurasi</span> */}
+                          <span className="text-[13px] font-bold text-foreground tabular-nums mt-0.5">{imgConfidence}</span>
+                        </div>
+                      </div>
+
                     </div>
                   );
                 })}

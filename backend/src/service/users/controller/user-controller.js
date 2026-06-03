@@ -26,7 +26,9 @@ export async function login(req, res) {
 
   try {
     const data = await UserRepo.loginUser({ email, password });
-    res.status(200).json({ message: 'Login berhasil', session: data.session, user: data.user });
+    res.status(200).json({ message: 'Login berhasil', 
+      session: data.session, 
+      user: data.user });
   } catch (err) {
     const message = err.message === 'Invalid login credentials'
       ? 'Email atau password salah'
@@ -76,6 +78,31 @@ export async function getProfileData(req, res) {
       UserRepo.getScanHistory(userId)
     ]);
 
+    const formattedScanHistory = (scanHistory || [])
+      .filter(item => item && item.bahan)
+      .map(item => {
+        let waktuFormat = "Baru saja";
+        if (item.created_at) {
+          const tanggalObj = new Date(item.created_at);
+          if (!isNaN(tanggalObj.getTime())) {
+            waktuFormat = tanggalObj.toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+          }
+        }
+
+        return {
+          id: item.id,
+          bahan: item.bahan,
+          waktu: waktuFormat,
+          skor: isNaN(parseInt(item.skor)) ? 0 : parseInt(item.skor)
+        };
+      });
+
     res.status(200).json({
       calcData: calcData ? {
         goalLabel: calcData.goal_label,
@@ -94,19 +121,11 @@ export async function getProfileData(req, res) {
         tinggi: biometrikData.tinggi_badan
       } : null,
 
-      scanHistory: (scanHistory || []).map(item => ({
-        id: item.id,
-        bahan: item.bahan,
-        waktu: new Date(item.created_at).toLocaleDateString('id-ID', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        }),
-        skor: item.skor
-      }))
+      scanHistory: formattedScanHistory
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("❌ ERROR DI GET_PROFILE_DATA:", err.message);
+    res.status(500).json({ error: "Gagal memuat data profil", rincian: err.message });
   }
 }
 

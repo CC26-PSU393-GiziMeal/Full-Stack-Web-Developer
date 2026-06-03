@@ -81,35 +81,42 @@ class UserRepo {
     return data;
   }
 
-  async saveScanHistory(userId, { bahan, skor }) {
+async saveScanHistory(userId, items) {
+  if (!Array.isArray(items) || items.length === 0) return null;
+
+  try {
+    const insertData = items.map(item => ({
+      user_id: userId,
+      bahan: item.bahan,
+      skor: parseInt(item.skor) || 0,
+      created_at: new Date().toISOString()
+    }));
+
     const { data, error } = await supabase
       .from('scan_history')
-      .insert({
-        user_id: userId,
-        bahan: bahan,
-        skor: parseInt(skor),
-        created_at: new Date().toISOString()
-      });
+      .insert(insertData)
+      .select(); 
 
     if (error) {
-      console.error("Gagal menyimpan data scan_history ke database:", error.message);
+      console.error("❌ Gagal menyimpan massal ke Supabase:", error.message);
     }
     return data;
+  } catch (err) {
+    console.error("❌ Error di saveScanHistory:", err.message);
+    return null;
   }
+}
   
   async getScanHistory(userId) {
-    const { data, error } = await supabase
-      .from('scan_history')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+  const { data, error } = await supabase
+    .from('scan_history')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error("Peringatan Scan History:", error.message);
-      return [];
-    }
-    return data || [];
-  }
+  if (error) throw error;
+  return data;
+}
 
 async saveRecipeHistory(userId, menuName, recipeData) {
   const { data, error } = await supabase
@@ -118,7 +125,7 @@ async saveRecipeHistory(userId, menuName, recipeData) {
       { 
         user_id: userId, 
         menu_name: menuName, 
-        recipe_data: recipeData // Mengamankan objek nutrisi utuh
+        recipe_data: recipeData
       }
     ]);
 
