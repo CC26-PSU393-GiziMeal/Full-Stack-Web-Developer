@@ -21,30 +21,33 @@ export async function predict(req, res) {
     const result = await PredictRepo.predictImage(req.files);
     if (!result) throw new Error("Hugging Face API tidak mengembalikan respon data apa pun.");
 
-    const userId = req.headers["x-user-id"] || req.body.userId; 
+    const userId = req.headers["x-user-id"] || req.body.userId;
     if (userId) {
       try {
         let namaBahanGabungan = "Bahan Makanan";
         let totalSkor = 0;
         let jumlahItem = 0;
 
-        if (result.detected_ingredients && Array.isArray(result.detected_ingredients) && result.detected_ingredients.length > 0) {
-          namaBahanGabungan = result.detected_ingredients.join(", ");
+        if (req.files && req.files.length > 0) {
+          namaBahanGabungan = req.files.map(f => f.originalname).join(", ");
         }
-        const predictionsData = result.per_image_predictions || result.predictions || result.prediction;
-        
+        let predictionsData = result.per_image_predictions || result.predictions || result.prediction;
+        if (predictionsData && !Array.isArray(predictionsData)) {
+          predictionsData = [predictionsData];
+        }
+
         if (Array.isArray(predictionsData) && predictionsData.length > 0) {
           predictionsData.forEach(item => {
             if (!item) return;
-            
+
             let rawConfidence = item.confidence_percent || item.confidence_score || 0;
             if (typeof rawConfidence === "string") {
               rawConfidence = rawConfidence.replace("%", "");
             }
-            
+
             const confidenceNum = parseFloat(rawConfidence);
             const skorAkurasi = Math.round(confidenceNum < 1 && confidenceNum > 0 ? confidenceNum * 100 : confidenceNum);
-            
+
             totalSkor += skorAkurasi;
             jumlahItem++;
           });
@@ -52,13 +55,13 @@ export async function predict(req, res) {
 
         const skorRataRata = jumlahItem > 0 ? Math.round(totalSkor / jumlahItem) : 0;
 
-        const singleRecordToSave = [{
+        const singleRecordToSave = {
           bahan: namaBahanGabungan,
-          skor: skorRataRata 
-        }];
-        
+          skor: skorRataRata
+        };
+
         console.log(`[SUPABASE] Menyimpan 1 riwayat ringkasan (${namaBahanGabungan}) ke Supabase...`);
-        await UserRepo.saveScanHistory(userId, singleRecordToSave);
+        await UserRepo.saveScanHistory(userId, [singleRecordToSave]);
         console.log("[SUPABASE] Riwayat tunggal berhasil dicatat.");
 
       } catch (dbError) {
@@ -157,10 +160,10 @@ export async function getRecipeDetails(req, res) {
     return res.status(200).json({ success: true, data: jsonResep });
   } catch (error) {
     console.error("Gemini AI Final Error:", error);
-    return res.status(500).json({ 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       message: "Gagal memproses resep dari AI karena server eksternal sedang sibuk. Silakan coba beberapa saat lagi.",
-      error: error.message 
+      error: error.message
     });
   }
 }

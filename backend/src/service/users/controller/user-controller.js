@@ -26,9 +26,11 @@ export async function login(req, res) {
 
   try {
     const data = await UserRepo.loginUser({ email, password });
-    res.status(200).json({ message: 'Login berhasil', 
-      session: data.session, 
-      user: data.user });
+    res.status(200).json({
+      message: 'Login berhasil',
+      session: data.session,
+      user: data.user
+    });
   } catch (err) {
     const message = err.message === 'Invalid login credentials'
       ? 'Email atau password salah'
@@ -39,7 +41,7 @@ export async function login(req, res) {
 
 export async function simpanKalkulator(req, res) {
   const { userId, gender, usia, berat, tinggi, bmr, tdee, target, karbo, protein, lemak, goalLabel } = req.body;
-  
+
   if (!userId) return res.status(400).json({ error: 'userId wajib disertakan' });
 
   try {
@@ -113,7 +115,7 @@ export async function getProfileData(req, res) {
         protein: calcData.protein,
         lemak: calcData.lemak
       } : null,
-      
+
       biometrikData: biometrikData ? {
         gender: biometrikData.gender,
         usia: biometrikData.usia,
@@ -167,6 +169,17 @@ export async function updateBiometrikData(req, res) {
   try {
     await UserRepo.saveBiometrik(userId, { gender, usia, berat, tinggi });
     res.status(200).json({ message: 'Informasi biometrik berhasil diperbarui' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function deleteAccount(req, res) {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ error: 'User ID wajib disertakan' });
+  try {
+    await UserRepo.deleteUser(userId);
+    res.status(200).json({ message: 'Akun berhasil dihapus' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

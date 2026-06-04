@@ -142,7 +142,20 @@ export default function DeteksiPage() {
 
       Swal.close();
       
-      navigate("/deteksi/hasil", { state: { result: jsonResult.data } });
+      // Inject original filenames into result so HasilDeteksi can display them
+      const resultData = jsonResult.data;
+      if (images.length === 1) {
+        resultData.filename = images[0].name;
+      }
+      if (resultData.per_image_predictions && Array.isArray(resultData.per_image_predictions)) {
+        resultData.per_image_predictions.forEach((pred, i) => {
+          if (images[i]) {
+            pred.filename = images[i].name;
+          }
+        });
+      }
+
+      navigate("/deteksi/hasil", { state: { result: resultData } });
 
     } catch (err) {
       console.error("Deteksi Alur Error di Frontend:", err);

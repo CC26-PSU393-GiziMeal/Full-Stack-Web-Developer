@@ -2,6 +2,7 @@
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 function getInitials(name = "") {
   return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
@@ -26,7 +27,6 @@ function ModalGantiPassword({ onClose }) {
   const [form, setForm] = useState({ lama: "", baru: "", konfirmasi: "" });
   const [show, setShow] = useState({ lama: false, baru: false, konfirmasi: false });
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const toggle = (k) => setShow((s) => ({ ...s, [k]: !s[k] }));
@@ -64,8 +64,13 @@ function ModalGantiPassword({ onClose }) {
         throw new Error(jsonResult.error || "Gagal memperbarui kata sandi.");
       }
 
-      setSuccess(true);
-      setTimeout(onClose, 1500);
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Kata sandi Anda berhasil diperbarui.",
+        confirmButtonColor: "var(--color-primary, #00935D)",
+      });
+      onClose();
     } catch (err) {
       console.error("Ganti Password Error:", err);
       setError(err.message);
@@ -74,57 +79,50 @@ function ModalGantiPassword({ onClose }) {
     }
   };
 
-  const inputClass = "w-full bg-surface-alt border border-border rounded-lg py-md pl-md pr-12 text-foreground focus:outline-none focus:ring-1 focus:ring-secondary text-[15px]";
+  const inputClass = "w-full bg-surface-container-low border border-outline-variant rounded-lg py-[14px] pl-md pr-12 text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary transition-all text-[15px]";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-md">
-      <div className="bg-card rounded-[24px] border border-border p-xl w-full max-w-md shadow-2xl">
+      <div className="bg-surface-container-lowest rounded-[24px] border border-outline-variant p-xl w-full max-w-md shadow-2xl">
         <div className="flex justify-between items-center mb-lg">
           <h3 className="text-[20px] tracking-tight text-primary font-semibold">Ganti Password</h3>
-          <button onClick={onClose} disabled={loading} className="text-muted-foreground hover:text-foreground p-1 rounded-full transition-colors disabled:opacity-30">
+          <button onClick={onClose} disabled={loading} className="text-on-surface-variant hover:text-on-surface p-1 rounded-full transition-colors disabled:opacity-30">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
-        {success ? (
-          <div className="flex flex-col items-center gap-md py-lg text-center">
-            <span className="material-symbols-outlined text-secondary text-[48px]">check_circle</span>
-            <p className="text-foreground font-semibold">Password berhasil diubah!</p>
-          </div>
-        ) : (
-          <div className="space-y-md">
-            {[
-              { key: "lama", label: "Password Lama" },
-              { key: "baru", label: "Password Baru" },
-              { key: "konfirmasi", label: "Konfirmasi Password Baru" },
-            ].map(({ key, label }) => (
-              <div key={key} className="space-y-xs">
-                <label className="text-[13px] font-semibold text-foreground">{label}</label>
-                <div className="relative">
-                  <input
-                    type={show[key] ? "text" : "password"}
-                    value={form[key]}
-                    onChange={set(key)}
-                    disabled={loading}
-                    placeholder="••••••••"
-                    className={`${inputClass} disabled:opacity-50`}
-                  />
-                  <button type="button" onClick={() => toggle(key)} disabled={loading} className="absolute right-md top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-30">
-                    <span className="material-symbols-outlined text-[18px]">{show[key] ? "visibility_off" : "visibility"}</span>
-                  </button>
-                </div>
+        <div className="space-y-md">
+          {[
+            { key: "lama", label: "Password Lama" },
+            { key: "baru", label: "Password Baru" },
+            { key: "konfirmasi", label: "Konfirmasi Password Baru" },
+          ].map(({ key, label }) => (
+            <div key={key} className="space-y-xs">
+              <label className="text-[14px] font-semibold text-on-surface">{label}</label>
+              <div className="relative">
+                <input
+                  type={show[key] ? "text" : "password"}
+                  value={form[key]}
+                  onChange={set(key)}
+                  disabled={loading}
+                  placeholder="••••••••"
+                  className={`${inputClass} disabled:opacity-50`}
+                />
+                <button type="button" onClick={() => toggle(key)} disabled={loading} className="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface disabled:opacity-30">
+                  <span className="material-symbols-outlined text-[18px]">{show[key] ? "visibility_off" : "visibility"}</span>
+                </button>
               </div>
-            ))}
-            {error && <p className="text-[13px] text-destructive font-medium">{error}</p>}
-            <button
-              onClick={submit}
-              disabled={loading}
-              className="w-full bg-primary text-primary-foreground font-semibold py-md rounded-xl hover:opacity-90 transition-all active:scale-[0.98] mt-sm flex items-center justify-center gap-xs disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
-              {loading ? "Menyimpan..." : "Simpan Password"}
-            </button>
-          </div>
-        )}
+            </div>
+          ))}
+          {error && <p className="text-[13px] text-destructive font-medium">{error}</p>}
+          <button
+            onClick={submit}
+            disabled={loading}
+            className="w-full bg-primary text-on-primary font-semibold py-md rounded-xl hover:bg-surface-tint transition-all active:scale-[0.98] mt-sm flex items-center justify-center gap-sm shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
+            {loading ? "Menyimpan..." : "Simpan Password"}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -132,70 +130,25 @@ function ModalGantiPassword({ onClose }) {
 
 function ModalHapusAkun({ onClose, onConfirm }) {
   const [confirm, setConfirm] = useState("");
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-md">
-      <div className="bg-card rounded-[24px] border border-destructive/30 p-xl w-full max-w-md shadow-2xl">
-        <div className="flex justify-between items-center mb-md">
-          <h3 className="text-[20px] tracking-tight text-destructive font-semibold">Hapus Akun</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 rounded-full transition-colors">
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-md mb-lg flex gap-sm">
-          <span className="material-symbols-outlined text-destructive text-[20px] flex-shrink-0 mt-0.5">warning</span>
-          <p className="text-[14px] leading-relaxed text-muted-foreground">
-            Tindakan ini <strong className="text-destructive font-semibold">tidak dapat dibatalkan</strong>. Seluruh data akun, riwayat scan, dan data kalkulator akan dihapus permanen.
-          </p>
-        </div>
-        <div className="space-y-sm mb-lg">
-          <label className="text-[13px] font-semibold text-foreground">Ketik <span className="text-destructive font-mono">HAPUS</span> untuk konfirmasi</label>
-          <input
-            type="text"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="HAPUS"
-            className="w-full bg-surface-alt border border-border rounded-lg py-md px-md text-foreground focus:outline-none focus:ring-1 focus:ring-destructive text-[15px]"
-          />
-        </div>
-        <div className="flex gap-sm">
-          <button onClick={onClose} className="flex-1 bg-surface border border-border text-foreground font-semibold py-md rounded-xl hover:bg-surface-alt transition-colors">
-            Batal
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={confirm !== "HAPUS"}
-            className="flex-1 bg-destructive text-destructive-foreground font-semibold py-md rounded-xl hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Hapus Akun
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ModalEditAkun({ onClose, onSuccess, initialData }) {
-  const [form, setForm] = useState({ firstName: initialData.firstName || "", lastName: initialData.lastName || "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const submit = async () => {
-    if (!form.firstName) { setError("Nama depan wajib diisi."); return; }
-    setError(""); setLoading(true);
+    if (confirm !== "HAPUS") return;
+    setError("");
+    setLoading(true);
     try {
       const userRaw = localStorage.getItem("user");
+      if (!userRaw) throw new Error("Sesi tidak ditemukan. Silakan login kembali.");
       const userId = JSON.parse(userRaw).id;
+
       const res = await fetch(`http://localhost:3000/users/account/${userId}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        method: "DELETE"
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gagal update akun");
+      if (!res.ok) throw new Error(data.error || "Gagal menghapus akun");
 
-      const oldUser = JSON.parse(userRaw);
-      oldUser.user_metadata = { ...oldUser.user_metadata, firstName: form.firstName, lastName: form.lastName };
-      localStorage.setItem("user", JSON.stringify(oldUser));
-      onSuccess(oldUser);
+      onConfirm();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -203,30 +156,50 @@ function ModalEditAkun({ onClose, onSuccess, initialData }) {
     }
   };
 
-  const inputClass = "w-full bg-surface-container-low border border-outline-variant rounded-lg py-[14px] px-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary transition-all text-[15px]";
+  const inputClass = "w-full bg-surface-container-low border border-outline-variant rounded-lg py-[14px] px-md text-on-surface placeholder:text-outline/60 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-[15px]";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-md">
       <div className="bg-surface-container-lowest rounded-[24px] border border-outline-variant p-xl w-full max-w-md shadow-2xl">
-        <div className="flex justify-between items-center mb-lg">
-          <h3 className="text-[20px] tracking-tight text-primary font-semibold">Edit Informasi Akun</h3>
+        <div className="flex justify-between items-center mb-md">
+          <h3 className="text-[20px] tracking-tight text-destructive font-semibold">Hapus Akun</h3>
           <button onClick={onClose} disabled={loading} className="text-on-surface-variant hover:text-on-surface p-1 rounded-full transition-colors disabled:opacity-30">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
-        <div className="space-y-md">
-          <div className="space-y-xs">
-            <label className="text-[14px] font-semibold text-on-surface">Nama Depan</label>
-            <input type="text" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} className={inputClass} disabled={loading} placeholder="Masukkan nama depan" />
-          </div>
-          <div className="space-y-xs">
-            <label className="text-[14px] font-semibold text-on-surface">Nama Belakang</label>
-            <input type="text" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} className={inputClass} disabled={loading} placeholder="Masukkan nama belakang" />
-          </div>
-          {error && <p className="text-[13px] text-destructive font-medium">{error}</p>}
-          <button onClick={submit} disabled={loading} className="w-full bg-primary text-on-primary font-semibold py-md rounded-xl hover:bg-surface-tint transition-all active:scale-[0.98] mt-sm flex items-center justify-center gap-sm shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+        
+        <div className="bg-red-50 dark:bg-red-950/80 border border-red-200 dark:border-red-900/50 rounded-xl p-md mb-lg flex gap-sm">
+          <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-[20px] flex-shrink-0 mt-0.5">warning</span>
+          <p className="text-[14px] leading-relaxed text-red-800 dark:text-red-200">
+            Tindakan ini <strong className="text-red-700 dark:text-red-300 font-bold bg-red-100 dark:bg-red-900/40 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-800/50 mx-0.5">tidak dapat dibatalkan</strong>. Seluruh data akun, riwayat scan, dan data kalkulator akan dihapus secara permanen.
+          </p>
+        </div>
+
+        <div className="space-y-sm mb-lg">
+          <label className="text-[14px] font-semibold text-on-surface">Ketik <span className="text-red-600 dark:text-red-400 font-mono font-bold bg-red-100 dark:bg-red-900/40 px-2 py-0.5 rounded border border-red-200 dark:border-red-800/50 mx-1">HAPUS</span> untuk konfirmasi</label>
+          <input
+            type="text"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            disabled={loading}
+            placeholder="HAPUS"
+            className={inputClass}
+          />
+        </div>
+
+        {error && <p className="text-[13px] text-destructive font-medium mb-md">{error}</p>}
+
+        <div className="flex gap-sm">
+          <button onClick={onClose} disabled={loading} className="flex-1 bg-surface border border-outline-variant text-on-surface font-semibold py-md rounded-xl hover:bg-surface-container-low transition-colors disabled:opacity-50">
+            Batal
+          </button>
+          <button
+            onClick={submit}
+            disabled={confirm !== "HAPUS" || loading}
+            className="flex-1 bg-destructive text-destructive-foreground font-semibold py-md rounded-xl hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-xs"
+          >
             {loading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
-            {loading ? "Menyimpan..." : "Simpan Perubahan"}
+            {loading ? "Menghapus..." : "Hapus Akun"}
           </button>
         </div>
       </div>
@@ -246,6 +219,80 @@ export default function ProfilePage() {
   const [modal, setModal] = useState(null);
   const [loadingData, setLoadingData] = useState(true);
   const [loadingRecipeHistory, setLoadingRecipeHistory] = useState(true);
+
+  const [isEditingAccount, setIsEditingAccount] = useState(false);
+  const [formEdit, setFormEdit] = useState({ firstName: "", lastName: "" });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  const handleStartEdit = () => {
+    try {
+      const userRaw = localStorage.getItem("user");
+      if (userRaw) {
+        const parsed = JSON.parse(userRaw);
+        const metadata = parsed.user_metadata || {};
+        setFormEdit({
+          firstName: metadata.firstName || "",
+          lastName: metadata.lastName || ""
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setIsEditingAccount(true);
+    setEditError("");
+  };
+
+  const handleSaveAccount = async () => {
+    if (!formEdit.firstName.trim()) {
+      setEditError("Nama depan wajib diisi.");
+      return;
+    }
+    setEditError("");
+    setEditLoading(true);
+    try {
+      const userRaw = localStorage.getItem("user");
+      if (!userRaw) throw new Error("Sesi tidak ditemukan. Silakan login kembali.");
+      const parsed = JSON.parse(userRaw);
+      const userId = parsed.id;
+
+      const res = await fetch(`http://localhost:3000/users/account/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formEdit)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal update akun");
+
+      const oldUser = JSON.parse(userRaw);
+      oldUser.user_metadata = { 
+        ...oldUser.user_metadata, 
+        firstName: formEdit.firstName, 
+        lastName: formEdit.lastName 
+      };
+      localStorage.setItem("user", JSON.stringify(oldUser));
+
+      const first = formEdit.firstName || "";
+      const last = formEdit.lastName || "";
+      setUserProfile(prev => ({ 
+        ...prev, 
+        name: `${first} ${last}`.trim() || "Pengguna GiziMeal" 
+      }));
+
+      setIsEditingAccount(false);
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Informasi akun berhasil diperbarui.",
+        confirmButtonColor: "var(--color-primary, #00935D)",
+      });
+    } catch (err) {
+      setEditError(err.message);
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isLogged) return;
@@ -336,7 +383,7 @@ export default function ProfilePage() {
   const quickAccess = [
     { icon: "calculate", label: "Kalkulator AKG", desc: "Hitung kebutuhan kalori harianmu", to: "/kalkulator" },
     { icon: "troubleshoot", label: "Deteksi Bahan", desc: "Scan bahan makanan & dapatkan rekomendasi", to: "/deteksi" },
-    { icon: "database", label: "Database Gizi", desc: "Cari informasi nutrisi bahan makanan", to: "/database" },
+    { icon: "database", label: "Tabel Gizi", desc: "Cari informasi nutrisi bahan makanan", to: "/database" },
   ];
 
   const accountItems = [
@@ -372,19 +419,6 @@ export default function ProfilePage() {
     <>
       {modal === "password" && <ModalGantiPassword onClose={() => setModal(null)} />}
       {modal === "hapus" && <ModalHapusAkun onClose={() => setModal(null)} onConfirm={handleHapusAkun} />}
-      {modal === "editAkun" && <ModalEditAkun
-        initialData={{
-          firstName: JSON.parse(localStorage.getItem("user"))?.user_metadata?.firstName || "",
-          lastName: JSON.parse(localStorage.getItem("user"))?.user_metadata?.lastName || ""
-        }}
-        onClose={() => setModal(null)}
-        onSuccess={(newUser) => {
-          const first = newUser.user_metadata.firstName || "";
-          const last = newUser.user_metadata.lastName || "";
-          setUserProfile(prev => ({ ...prev, name: `${first} ${last}`.trim() || "Pengguna GiziMeal" }));
-          setModal(null);
-        }}
-      />}
 
 
       <main className="flex-grow w-full max-w-5xl mx-auto px-container-margin md:px-lg py-xl md:py-lg space-y-lg">
@@ -416,21 +450,84 @@ export default function ProfilePage() {
               <span className="material-symbols-outlined text-[22px]">person</span>
               Informasi Akun
             </h2>
-            <button onClick={() => setModal("editAkun")} className="text-muted-foreground hover:text-primary transition-colors p-1" title="Edit Informasi Akun">
-              <span className="material-symbols-outlined text-[20px]">edit</span>
-            </button>
+            {!isEditingAccount && (
+              <button onClick={handleStartEdit} className="text-muted-foreground hover:text-primary transition-colors p-1" title="Edit Informasi Akun">
+                <span className="material-symbols-outlined text-[20px]">edit</span>
+              </button>
+            )}
           </div>
-          <ul className="flex flex-col">
-            {accountItems.map((item, idx) => (
-              <li key={item.label} className={`flex items-center gap-md py-md ${idx !== accountItems.length - 1 ? 'border-b border-border/50' : ''}`}>
-                <span className="material-symbols-outlined text-muted-foreground text-[24px] flex-shrink-0">{item.icon}</span>
-                <div className="flex-grow min-w-0">
-                  <p className="text-[12px] font-medium tracking-[0.05em] uppercase text-muted-foreground">{item.label}</p>
-                  <p className="text-[15px] text-foreground font-medium truncate">{item.value}</p>
+          {isEditingAccount ? (
+            <div className="space-y-md">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+                <div className="space-y-xs">
+                  <label className="text-[14px] font-semibold text-on-surface">Nama Depan</label>
+                  <input
+                    type="text"
+                    value={formEdit.firstName}
+                    onChange={(e) => setFormEdit({ ...formEdit, firstName: e.target.value })}
+                    className="w-full bg-surface-container-low border border-outline-variant rounded-lg py-[12px] px-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary transition-all text-[15px]"
+                    disabled={editLoading}
+                    placeholder="Masukkan nama depan"
+                  />
                 </div>
-              </li>
-            ))}
-          </ul>
+                <div className="space-y-xs">
+                  <label className="text-[14px] font-semibold text-on-surface">Nama Belakang</label>
+                  <input
+                    type="text"
+                    value={formEdit.lastName}
+                    onChange={(e) => setFormEdit({ ...formEdit, lastName: e.target.value })}
+                    className="w-full bg-surface-container-low border border-outline-variant rounded-lg py-[12px] px-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary transition-all text-[15px]"
+                    disabled={editLoading}
+                    placeholder="Masukkan nama belakang"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-md py-md border-b border-border/50 opacity-60">
+                <span className="material-symbols-outlined text-muted-foreground text-[24px] flex-shrink-0">alternate_email</span>
+                <div className="flex-grow min-w-0">
+                  <p className="text-[12px] font-medium tracking-[0.05em] uppercase text-muted-foreground">Username</p>
+                  <p className="text-[15px] text-foreground font-medium truncate">@{userProfile.username}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-md py-md opacity-60">
+                <span className="material-symbols-outlined text-muted-foreground text-[24px] flex-shrink-0">mail</span>
+                <div className="flex-grow min-w-0">
+                  <p className="text-[12px] font-medium tracking-[0.05em] uppercase text-muted-foreground">Email</p>
+                  <p className="text-[15px] text-foreground font-medium truncate">{userProfile.email}</p>
+                </div>
+              </div>
+              {editError && <p className="text-[13px] text-destructive font-medium">{editError}</p>}
+              <div className="flex gap-sm pt-sm border-t border-border/30">
+                <button
+                  onClick={() => setIsEditingAccount(false)}
+                  disabled={editLoading}
+                  className="flex-1 bg-surface border border-outline-variant text-on-surface font-semibold py-md rounded-xl hover:bg-surface-container-low transition-colors disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleSaveAccount}
+                  disabled={editLoading}
+                  className="flex-1 bg-primary text-on-primary font-semibold py-md rounded-xl hover:bg-surface-tint transition-all active:scale-[0.98] flex items-center justify-center gap-sm shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {editLoading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
+                  {editLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <ul className="flex flex-col">
+              {accountItems.map((item, idx) => (
+                <li key={item.label} className={`flex items-center gap-md py-md ${idx !== accountItems.length - 1 ? 'border-b border-border/50' : ''}`}>
+                  <span className="material-symbols-outlined text-muted-foreground text-[24px] flex-shrink-0">{item.icon}</span>
+                  <div className="flex-grow min-w-0">
+                    <p className="text-[12px] font-medium tracking-[0.05em] uppercase text-muted-foreground">{item.label}</p>
+                    <p className="text-[15px] text-foreground font-medium truncate">{item.value}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {/* SECTION 2: Informasi Fisik & Biometrik */}

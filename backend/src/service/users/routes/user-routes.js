@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, simpanKalkulator, getKalkulator, getProfileData, changePassword, updateAccount, updateBiometrikData } from '../controller/user-controller.js';
+import { register, login, simpanKalkulator, getKalkulator, getProfileData, changePassword, updateAccount, updateBiometrikData, deleteAccount } from '../controller/user-controller.js';
 
 const router = Router();
 
@@ -11,4 +11,5 @@ router.get('/profile/:userId', getProfileData);
 router.post('/changePassword', changePassword);
 router.put('/account/:userId', updateAccount);
 router.put('/biometrik/:userId', updateBiometrikData);
+router.delete('/account/:userId', deleteAccount);
 export default router;

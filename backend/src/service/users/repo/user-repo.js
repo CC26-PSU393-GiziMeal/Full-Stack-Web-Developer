@@ -166,6 +166,12 @@ async getRecipeHistory(userId) {
     if (error) throw new Error(`Gagal update profil: ${error.message}`);
     return data.user;
   }
+
+  async deleteUser(userId) {
+    const { data, error } = await supabase.auth.admin.deleteUser(userId);
+    if (error) throw new Error(`Gagal menghapus user: ${error.message}`);
+    return data;
+  }
 }
 
 export default new UserRepo();
