@@ -8,6 +8,12 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from '../src/docs/swagger.js';
 
 const app = express();
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "Railway hidup"
+  });
+});
 
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
