@@ -98,11 +98,11 @@ async saveScanHistory(userId, items) {
       .select(); 
 
     if (error) {
-      console.error("❌ Gagal menyimpan massal ke Supabase:", error.message);
+      console.error("Gagal menyimpan massal ke Supabase:", error.message);
     }
     return data;
   } catch (err) {
-    console.error("❌ Error di saveScanHistory:", err.message);
+    console.error("Error di saveScanHistory:", err.message);
     return null;
   }
 }

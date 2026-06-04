@@ -126,7 +126,7 @@ export async function getProfileData(req, res) {
       scanHistory: formattedScanHistory
     });
   } catch (err) {
-    console.error("❌ ERROR DI GET_PROFILE_DATA:", err.message);
+    console.error("ERROR DI GET_PROFILE_DATA:", err.message);
     res.status(500).json({ error: "Gagal memuat data profil", rincian: err.message });
   }
 }

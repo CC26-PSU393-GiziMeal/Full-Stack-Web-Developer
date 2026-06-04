@@ -65,12 +65,12 @@ export async function predict(req, res) {
         console.log("[SUPABASE] Riwayat tunggal berhasil dicatat.");
 
       } catch (dbError) {
-        console.error("⚠️ Gagal mencatat riwayat ringkasan ke database Supabase:", dbError.message);
+        console.error("Gagal mencatat riwayat ringkasan ke database Supabase:", dbError.message);
       }
     }
     return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.error("❌ CRITICAL ERROR DI CONTROLLER:", error);
+    console.error("CRITICAL ERROR DI CONTROLLER:", error);
     return res.status(500).json({
       success: false,
       message: "Terjadi kesalahan saat memproses prediksi di server",
