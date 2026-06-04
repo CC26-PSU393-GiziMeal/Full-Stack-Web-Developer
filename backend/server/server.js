@@ -15,7 +15,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: 'https://gizimeal.vercel.app/' }));
 app.use(express.json());
 app.use("/", predictRoutes);
 app.use('/calculate', calculateRoutes);
