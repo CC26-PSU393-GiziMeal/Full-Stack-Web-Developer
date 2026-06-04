@@ -7,15 +7,9 @@ import chatbotRoutes from '../src/service/chatbot/routes/index.js'
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from '../src/docs/swagger.js';
 
-const app = express();
-app.get("/", (req, res) => {
-  res.status(200).json({
-    status: "ok",
-    message: "Railway hidup"
-  });
-});
-
 app.use(cors({ origin: 'https://gizimeal.vercel.app' }));
+const app = express();
+
 app.use(express.json());
 app.use("/", predictRoutes);
 app.use('/calculate', calculateRoutes);
