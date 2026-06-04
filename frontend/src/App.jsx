@@ -13,7 +13,7 @@ import KalkulatorPage from "./pages/Kalkulator";
 import DatabaseGiziPage from "./pages/DatabaseGizi";
 import TentangPage from "./pages/Tentang";
 import ReferensiPage from "./pages/Referensi";
-import FAQPage from "./pages/FAQ";
+import FAQPage from "./pages/Faq";
 import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
 import NotFoundPage from "./pages/NotFound";

@@ -126,7 +126,7 @@ export default function DeteksiPage() {
         currentUserId = JSON.parse(userRaw).id;
       }
 
-      const response = await fetch("http://localhost:3000/predict", {
+      const response = await fetch("https://gizimeal.up.railway.app/predict", {
         method: "POST",
         headers: {
           ...(currentUserId && { "X-User-Id": String(currentUserId) })
@@ -142,7 +142,6 @@ export default function DeteksiPage() {
 
       Swal.close();
       
-      // Inject original filenames into result so HasilDeteksi can display them
       const resultData = jsonResult.data;
       if (images.length === 1) {
         resultData.filename = images[0].name;

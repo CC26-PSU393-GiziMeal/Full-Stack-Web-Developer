@@ -47,7 +47,7 @@ function ModalGantiPassword({ onClose }) {
       }
       const userId = JSON.parse(userRaw).id;
 
-      const response = await fetch("http://localhost:3000/users/changePassword", {
+      const response = await fetch("https://gizimeal.up.railway.app/users/changePassword", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -142,7 +142,7 @@ function ModalHapusAkun({ onClose, onConfirm }) {
       if (!userRaw) throw new Error("Sesi tidak ditemukan. Silakan login kembali.");
       const userId = JSON.parse(userRaw).id;
 
-      const res = await fetch(`http://localhost:3000/users/account/${userId}`, {
+      const res = await fetch(`https://gizimeal.up.railway.app/users/account/${userId}`, {
         method: "DELETE"
       });
       const data = await res.json();
@@ -256,7 +256,7 @@ export default function ProfilePage() {
       const parsed = JSON.parse(userRaw);
       const userId = parsed.id;
 
-      const res = await fetch(`http://localhost:3000/users/account/${userId}`, {
+      const res = await fetch(`https://gizimeal.up.railway.app/users/account/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formEdit)
@@ -319,7 +319,7 @@ export default function ProfilePage() {
         if (!userRaw) return;
         const userId = JSON.parse(userRaw).id;
 
-        const response = await fetch(`http://localhost:3000/users/profile/${userId}`);
+        const response = await fetch(`https://gizimeal.up.railway.app/users/profile/${userId}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -341,7 +341,7 @@ export default function ProfilePage() {
         if (!userRaw) return;
         const userId = JSON.parse(userRaw).id;
 
-        const response = await fetch(`http://localhost:3000/recipe-history/${userId}`);
+        const response = await fetch(`https://gizimeal.up.railway.app/recipe-history/${userId}`);
         const json = await response.json();
 
         if (response.ok && json.success) {
